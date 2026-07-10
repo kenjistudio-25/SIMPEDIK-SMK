@@ -1,0 +1,1270 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Siswa - SMKN 1 Simpang Teritip</title>
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Supabase JS SDK -->
+    <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
+    <style>
+        :root {
+            --primary-color: #667eea;
+            --secondary-color: #764ba2;
+            --bg-light: #f4f6f9;
+            --navbar-bg: #dc2626; /* Warna Merah untuk Navbar */
+            --header-height: 60px;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--bg-light);
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        /* --- Navbar (Custom Red) --- */
+        .navbar {
+            height: var(--header-height);
+            background-color: var(--navbar-bg);
+            display: flex;
+            align-items: center;
+            padding: 0 1rem;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            z-index: 1002;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+        }
+
+        .navbar-brand {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            text-decoration: none;
+            color: white;
+        }
+
+        .navbar-brand img {
+            height: 40px;
+            width: auto;
+            background-color: white;
+            border-radius: 50%;
+            padding: 2px;
+        }
+
+        .navbar-brand span {
+            font-weight: 700;
+            font-size: 1.1rem;
+            color: white;
+        }
+
+        /* Tombol Logout */
+        .btn-logout {
+            margin-left: auto;
+            background-color: transparent;
+            border: 1px solid white;
+            color: white;
+            padding: 8px 15px;
+            border-radius: 5px;
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 0.9rem;
+            transition: all 0.3s;
+        }
+        .btn-logout:hover {
+            background-color: white;
+            color: var(--navbar-bg);
+        }
+
+        /* --- Main Content --- */
+        .main-content {
+            margin-top: var(--header-height);
+            padding: 2rem;
+            flex: 1;
+            overflow-y: auto;
+            width: 100%;
+        }
+
+        .dashboard-card {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+            margin-bottom: 20px;
+        }
+
+        /* Footer */
+        .main-footer {
+            text-align: center;
+            padding: 20px;
+            color: #888;
+            font-size: 0.85rem;
+            border-top: 1px solid #eee;
+            margin-top: 20px;
+        }
+
+        @media (max-width: 768px) {
+            .navbar-brand span {
+                font-size: 1rem;
+            }
+
+            .main-content {
+                padding: 2rem 5px;
+            }
+        }
+
+        /* Accordion Styles */
+        .accordion {
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            overflow: hidden;
+        }
+        .accordion-item {
+            border-bottom: 1px solid #e2e8f0;
+        }
+        .accordion-item:last-child {
+            border-bottom: none;
+        }
+        .accordion-header {
+            background-color: #fff;
+            padding: 15px 20px;
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-weight: 600;
+            color: #333;
+            transition: background-color 0.2s;
+        }
+        .accordion-header:hover {
+            background-color: #f8fafc;
+        }
+        .accordion-content {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.3s ease-out;
+            background-color: #1e2330;
+        }
+        .accordion-body {
+            padding: 20px;
+            border-top: 1px solid #2d3548;
+            color: #cbd5e1;
+        }
+        .accordion-icon {
+            transition: transform 0.3s ease;
+            color: #9ca3af;
+        }
+        .accordion-item.active .accordion-icon {
+            transform: rotate(180deg);
+        }
+
+        /* Tab Styles (di dalam accordion PKL) */
+        .tab-nav {
+            display: flex;
+            gap: 4px;
+            border-bottom: 2px solid #2d3548;
+            margin-bottom: 15px;
+            overflow-x: auto;
+            scrollbar-width: none;
+            -ms-overflow-style: none;
+        }
+        .tab-nav::-webkit-scrollbar { display: none; }
+        .tab-btn {
+            padding: 10px 18px;
+            border: none;
+            background: transparent;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 0.88rem;
+            color: #94a3b8;
+            border-bottom: 3px solid transparent;
+            margin-bottom: -2px;
+            transition: all 0.2s;
+        }
+        .tab-btn:hover {
+            color: #e2e8f0;
+            background-color: #2d3548;
+        }
+        .tab-btn.active {
+            color: #06b6d4;
+            border-bottom-color: #06b6d4;
+            background-color: #0f2030;
+        }
+        .tab-btn.pkl-tab.active {
+            color: #fff;
+            background-color: var(--navbar-bg);
+            border-bottom-color: #b91c1c;
+        }
+        .tab-pane {
+            display: none;
+        }
+        .tab-pane.active {
+            display: block;
+        }
+
+        /* Table Styles */
+        .table-responsive { overflow-x: auto; margin-top: 10px; }
+        .custom-table { width: 100%; border-collapse: collapse; font-size: 0.9rem; }
+        .custom-table th, .custom-table td { padding: 12px 15px; text-align: left; border: 1px solid #2d3548; }
+        .custom-table th { background-color: #E6F2DD; color: #1a1a1a; font-weight: 600; }
+        .custom-table td { color: #cbd5e1; }
+        .custom-table tr:hover td { background-color: #253047; }
+        .status-badge { padding: 4px 8px; border-radius: 4px; font-size: 0.8rem; font-weight: 600; }
+
+        /* Badge Status Pembayaran Sumbangan Komite */
+        .badge-lunas-sk {
+            display: inline-flex; align-items: center; gap: 4px;
+            background: rgba(16,185,129,0.15); color: #34d399;
+            padding: 3px 10px; border-radius: 10px;
+            font-size: 0.78rem; font-weight: 600;
+            white-space: nowrap;
+        }
+        .badge-belum-sk {
+            display: inline-flex; align-items: center; gap: 4px;
+            background: rgba(245,158,11,0.15); color: #fbbf24;
+            padding: 3px 10px; border-radius: 10px;
+            font-size: 0.78rem; font-weight: 600;
+            white-space: nowrap;
+        }
+
+        /* Info & Summary Riwayat Sumbangan Komite */
+        .sumbangan-info {
+            font-size: 0.82rem;
+            color: #cbd5e1;
+            margin-bottom: 14px;
+            padding: 8px 12px;
+            background: #0f2030;
+            border-radius: 6px;
+            border-left: 3px solid #06b6d4;
+        }
+        .sumbangan-info strong { color: #e2e8f0; }
+        .sumbangan-summary {
+            display: flex;
+            justify-content: flex-end;
+            gap: 18px;
+            margin-top: 10px;
+            font-size: 0.85rem;
+            color: #cbd5e1;
+            flex-wrap: wrap;
+        }
+        .sumbangan-summary strong { color: #06b6d4; }
+        .sumbangan-summary strong.sisa-sumbangan { color: #ef4444; }
+
+        /* Scroll horizontal tabel Sumbangan Komite di mode smartphone */
+        .sumbangan-table-wrap {
+            -webkit-overflow-scrolling: touch;
+        }
+        @media (max-width: 768px) {
+            .sumbangan-table {
+                min-width: 480px;
+                font-size: 0.78rem;
+            }
+            .sumbangan-table th,
+            .sumbangan-table td {
+                white-space: nowrap;
+                padding: 8px 10px;
+            }
+            .badge-lunas-sk,
+            .badge-belum-sk {
+                font-size: 0.72rem;
+                padding: 2px 8px;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Navbar -->
+    <nav class="navbar">
+        <a href="#" class="navbar-brand">
+            <img src="" alt="Logo Sekolah" style="display: none;">
+            <span></span>
+        </a>
+        <a href="#" class="btn-logout" id="logoutBtn">Logout</a>
+    </nav>
+
+    <!-- Main Content Area -->
+    <main class="main-content">
+        <div style="display: flex; justify-content: flex-end; margin-bottom: 20px;">
+            <div style="background: white; padding: 10px 20px; border-radius: 30px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); color: #555; font-weight: 600; font-size: 0.9rem; display: flex; align-items: center; gap: 10px;">
+                <i class="far fa-clock" style="color: var(--navbar-bg);"></i>
+                <span id="liveDateTime"></span>
+            </div>
+        </div>
+
+        <!-- Container Identitas Siswa -->
+        <div class="dashboard-card" id="studentProfileCard" style="display: none;">
+            <div style="display: flex; align-items: center; gap: 20px; flex-wrap: wrap;">
+                <div style="flex-shrink: 0;">
+                     <div style="width: 80px; height: 80px; background-color: #f1f5f9; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 2.5rem; color: var(--navbar-bg); border: 2px solid #e2e8f0;">
+                        <i class="fas fa-user-graduate"></i>
+                     </div>
+                </div>
+                <div style="flex-grow: 1;">
+                    <h3 id="profileName" style="margin: 0 0 10px 0; color: #333; border-bottom: 1px solid #eee; padding-bottom: 5px;">Nama Siswa</h3>
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 10px; font-size: 0.95rem; color: #555;">
+                        <div><strong>NISN:</strong> <span id="profileNisn">-</span></div>
+                        <div><strong>Tempat, Tgl Lahir:</strong> <span id="profileTTL">-</span></div>
+                        <div><strong>Alamat:</strong> <span id="profileAlamat">-</span></div>
+                        <div><strong>Nama Ayah:</strong> <span id="profileAyah">-</span></div>
+                        <div><strong>Nama Ibu:</strong> <span id="profileIbu">-</span></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Container Catatan Perkembangan Sekolah Ku -->
+        <div class="dashboard-card">
+            <h2 style="margin-bottom: 20px; color: #333; border-bottom: 1px solid #eee; padding-bottom: 10px;">Catatan Perkembangan Sekolah Ku</h2>
+            
+            <div class="accordion">
+                <!-- Item 1: Riwayat Piket Umum -->
+                <div class="accordion-item">
+                    <div class="accordion-header" onclick="toggleAccordion(this)">
+                        <span><i class="fas fa-broom" style="color: #f59e0b; margin-right: 10px; width: 20px; text-align: center;"></i> Riwayat Piket Umum</span>
+                        <i class="fas fa-chevron-down accordion-icon"></i>
+                    </div>
+                    <div class="accordion-content">
+                        <div class="accordion-body">
+                            <div class="table-responsive">
+                                <table class="custom-table" id="piketTable">
+                                    <thead>
+                                        <tr>
+                                            <th>No</th>
+                                            <th>Tanggal</th>
+                                            <th>Area Piket</th>
+                                            <th>Status</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr><td colspan="4" style="text-align:center;">Memuat data...</td></tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Item 2: Data Kehadiran -->
+                <div class="accordion-item">
+                    <div class="accordion-header" onclick="toggleAccordion(this)">
+                        <span><i class="fas fa-calendar-check" style="color: #10b981; margin-right: 10px; width: 20px; text-align: center;"></i> Data Kehadiran</span>
+                        <i class="fas fa-chevron-down accordion-icon"></i>
+                    </div>
+                    <div class="accordion-content">
+                        <div class="accordion-body">
+                            <div class="table-responsive">
+                                <table class="custom-table" id="absensiTable">
+                                    <thead>
+                                        <tr>
+                                            <th>No</th>
+                                            <th>Tanggal</th>
+                                            <th>Hari</th>
+                                            <th>Status</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr><td colspan="4" style="text-align:center;">Memuat data...</td></tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Item 3: Nilai Akademisku -->
+                <div class="accordion-item">
+                    <div class="accordion-header" onclick="toggleAccordion(this)">
+                        <span><i class="fas fa-chart-line" style="color: #3b82f6; margin-right: 10px; width: 20px; text-align: center;"></i> Nilai Akademisku</span>
+                        <i class="fas fa-chevron-down accordion-icon"></i>
+                    </div>
+                    <div class="accordion-content">
+                        <div class="accordion-body">
+                            <div class="table-responsive">
+                                <table class="custom-table" id="nilaiTable">
+                                    <thead>
+                                        <tr>
+                                            <th>No</th>
+                                            <th>Mata Pelajaran</th>
+                                            <th>Semester</th>
+                                            <th>UH1</th>
+                                            <th>UH2</th>
+                                            <th>UH3</th>
+                                            <th>UH4</th>
+                                            <th>UH5</th>
+                                            <th>UH6</th>
+                                            <th>UH7</th>
+                                            <th>NH</th>
+                                            <th>UTS</th>
+                                            <th>US</th>
+                                            <th>NR</th>
+                                            <th>Status</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr><td colspan="15" style="text-align:center;">Memuat data...</td></tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Item 4: Riwayat Kasus Pembelajaran -->
+                <div class="accordion-item">
+                    <div class="accordion-header" onclick="toggleAccordion(this)">
+                        <span><i class="fas fa-exclamation-triangle" style="color: #ef4444; margin-right: 10px; width: 20px; text-align: center;"></i> Riwayat Kasus Pembelajaran</span>
+                        <i class="fas fa-chevron-down accordion-icon"></i>
+                    </div>
+                    <div class="accordion-content">
+                        <div class="accordion-body">
+                            <div class="table-responsive">
+                                <table class="custom-table" id="kasusTable">
+                                    <thead>
+                                        <tr>
+                                            <th>No</th>
+                                            <th>Tanggal</th>
+                                            <th>Jenis Kasus</th>
+                                            <th>Mata Pelajaran</th>
+                                            <th>Pelapor</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr><td colspan="5" style="text-align:center;">Memuat data...</td></tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Item 5: Riwayat Pembinaan Guru Wali -->
+                <div class="accordion-item">
+                    <div class="accordion-header" onclick="toggleAccordion(this)">
+                        <span><i class="fas fa-user-tie" style="color: #8b5cf6; margin-right: 10px; width: 20px; text-align: center;"></i> Riwayat Pembinaan Guru Wali</span>
+                        <i class="fas fa-chevron-down accordion-icon"></i>
+                    </div>
+                    <div class="accordion-content">
+                        <div class="accordion-body">
+                            <div class="table-responsive">
+                                <table class="custom-table" id="pembinaanTable">
+                                    <thead>
+                                        <tr>
+                                            <th>No</th>
+                                            <th>Tanggal</th>
+                                            <th>Kasus Pembinaan</th>
+                                            <th>Guru Wali</th>
+                                            <th>Foto</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr><td colspan="5" style="text-align:center;">Memuat data...</td></tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Item 6: Praktik Kerja Lapangan (PKL) -->
+                <div class="accordion-item">
+                    <div class="accordion-header" onclick="toggleAccordion(this)">
+                        <span><i class="fas fa-briefcase" style="color: #06b6d4; margin-right: 10px; width: 20px; text-align: center;"></i> Praktik Kerja Lapangan (PKL)</span>
+                        <i class="fas fa-chevron-down accordion-icon"></i>
+                    </div>
+                    <div class="accordion-content">
+                        <div class="accordion-body">
+
+                            <!-- Tab Navigation -->
+                            <div class="tab-nav">
+                                <button class="tab-btn pkl-tab active" onclick="switchPklTab(this, 'pklAbsensiTab')">
+                                    <i class="fas fa-calendar-check"></i> Absensi Kehadiran
+                                </button>
+                                <button class="tab-btn pkl-tab" onclick="switchPklTab(this, 'pklKasusTab')">
+                                    <i class="fas fa-exclamation-triangle"></i> Kasus PKL
+                                </button>
+                                <button class="tab-btn pkl-tab" onclick="switchPklTab(this, 'pklNilaiTab')">
+                                    <i class="fas fa-chart-line"></i> Nilai PKL
+                                </button>
+                            </div>
+
+                            <!-- Tab: Absensi Kehadiran -->
+                            <div class="tab-pane active" id="pklAbsensiTab">
+                                <div class="table-responsive">
+                                    <table class="custom-table" id="pklAbsensiTable">
+                                        <thead>
+                                            <tr>
+                                                <th>No</th>
+                                                <th>Kode Absen</th>
+                                                <th>Nama Siswa</th>
+                                                <th>NISN</th>
+                                                <th>Tanggal</th>
+                                                <th>Status Kehadiran</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <tr><td colspan="6" style="text-align:center;">Memuat data...</td></tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+
+                            <!-- Tab: Kasus PKL -->
+                            <div class="tab-pane" id="pklKasusTab">
+                                <div class="table-responsive">
+                                    <table class="custom-table" id="pklKasusTable">
+                                        <thead>
+                                            <tr>
+                                                <th>No</th>
+                                                <th>Kode Kasus</th>
+                                                <th>Tanggal</th>
+                                                <th>Nama Siswa</th>
+                                                <th>Deskripsi Kasus</th>
+                                                <th>Tindak Lanjut</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <tr><td colspan="6" style="text-align:center;">Memuat data...</td></tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+
+                            <!-- Tab: Nilai PKL -->
+                            <div class="tab-pane" id="pklNilaiTab">
+                                <div class="table-responsive">
+                                    <table class="custom-table" id="pklNilaiTable">
+                                        <thead>
+                                            <tr>
+                                                <th>No</th>
+                                                <th>Kode Nilai</th>
+                                                <th>Nama Siswa</th>
+                                                <th>Kelas</th>
+                                                <th>Kode SKKNI</th>
+                                                <th>Deskripsi SKKNI</th>
+                                                <th>Nilai</th>
+                                                <th>Deskripsi Nilai</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <tr><td colspan="8" style="text-align:center;">Memuat data...</td></tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Item 7: Sumbangan Pendidikan Komite Sekolah -->
+                <div class="accordion-item">
+                    <div class="accordion-header" onclick="toggleAccordion(this)">
+                        <span><i class="fas fa-hand-holding-dollar" style="color: #06b6d4; margin-right: 10px; width: 20px; text-align: center;"></i> Sumbangan Pendidikan Komite Sekolah</span>
+                        <i class="fas fa-chevron-down accordion-icon"></i>
+                    </div>
+                    <div class="accordion-content">
+                        <div class="accordion-body">
+                            <div id="sumbanganLoadingInfo" class="sumbangan-info">
+                                <i class="fas fa-spinner fa-spin"></i> Memuat data tahun pelajaran...
+                            </div>
+
+                            <!-- Tab Navigasi Tahun Pelajaran (diisi otomatis sesuai jumlah tahun) -->
+                            <div class="tab-nav" id="sumbanganTabNav" style="display:none;"></div>
+
+                            <!-- Isi Tab per Tahun Pelajaran (diisi otomatis) -->
+                            <div id="sumbanganTabContent"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Footer -->
+        <footer class="main-footer">
+            <p>&copy; 2024 SMK Negeri 1 Simpang Teritip. All rights reserved.</p>
+            <p>Dikembangkan oleh Tim IT Sekolah.</p>
+        </footer>
+    </main>
+
+    <script>
+        // --- Supabase Integration for Navbar ---
+        const supabaseUrl = 'https://ixccpgfllwerlifpcpdp.supabase.co';
+        const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Iml4Y2NwZ2ZsbHdlcmxpZnBjcGRwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODI4NTE3MTEsImV4cCI6MjA5ODQyNzcxMX0.CwrrPcl0RkDK4zRWhfp7oTqwNlxOIZIb3IGUUzKTE9Q';
+        
+        // --- Supabase Integration for Absensi ---
+        const absensiUrl = 'https://ixccpgfllwerlifpcpdp.supabase.co';
+        const absensiKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Iml4Y2NwZ2ZsbHdlcmxpZnBjcGRwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODI4NTE3MTEsImV4cCI6MjA5ODQyNzcxMX0.CwrrPcl0RkDK4zRWhfp7oTqwNlxOIZIb3IGUUzKTE9Q';
+        
+        let supabaseClient;
+        let absensiClient;
+        if (typeof supabase !== 'undefined') {
+            supabaseClient = supabase.createClient(supabaseUrl, supabaseKey);
+            absensiClient = supabase.createClient(absensiUrl, absensiKey);
+
+            async function loadSchoolIdentity() {
+                try {
+                    const { data, error } = await supabaseClient
+                        .from('identitassekolah')
+                        .select('nama_sekolah, logo')
+                        .limit(1)
+                        .single();
+                    
+                    if (data) {
+                        if (data.nama_sekolah) {
+                            document.querySelector('.navbar-brand span').textContent = data.nama_sekolah;
+                        }
+                        if (data.logo) {
+                            const img = document.querySelector('.navbar-brand img');
+                            img.src = data.logo;
+                            img.style.display = 'block';
+                        }
+                    }
+                } catch (err) {
+                    console.error("Error loading school identity:", err);
+                }
+            }
+            document.addEventListener('DOMContentLoaded', loadSchoolIdentity);
+        }
+
+        // --- Fitur Jam & Tanggal Berjalan ---
+        function updateLiveTime() {
+            const now = new Date();
+            const dateOptions = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
+            const timeOptions = { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false };
+            document.getElementById('liveDateTime').textContent = `${now.toLocaleDateString('id-ID', dateOptions)} | ${now.toLocaleTimeString('id-ID', timeOptions).replace(/\./g, ':')} WIB`;
+        }
+        setInterval(updateLiveTime, 1000);
+        updateLiveTime();
+
+        // --- Load Data Siswa dari Sesi Login ---
+        document.addEventListener('DOMContentLoaded', () => {
+            const session = JSON.parse(sessionStorage.getItem('siswa_session'));
+            
+            if (session) {
+                document.getElementById('studentProfileCard').style.display = 'block';
+                document.getElementById('profileName').textContent = session.nama_siswa || '-';
+                document.getElementById('profileNisn').textContent = session.nisn || '-';
+                
+                const ttl = (session.tempat_lahir || '-') + ', ' + (session.tanggal_lahir || '-');
+                document.getElementById('profileTTL').textContent = ttl;
+                
+                document.getElementById('profileAlamat').textContent = session.alamat || '-';
+                document.getElementById('profileAyah').textContent = session.nama_ayah || '-';
+                document.getElementById('profileIbu').textContent = session.nama_ibu || '-';
+
+                // Load Data Accordion
+                loadRiwayatPiket(session.nama_siswa);
+                loadAbsensiSiswa(session.nama_siswa);
+                loadNilaiSiswa(session.nama_siswa);
+                loadKasusSiswa(session.nama_siswa);
+                loadPembinaanWali(session.nama_siswa);
+                loadPklSiswa(session.nama_siswa, session.nisn);
+                loadSumbanganKomite(session.nama_siswa, session.nisn);
+            } else {
+                // Jika tidak ada sesi, redirect ke login
+                window.location.href = 'index.html';
+            }
+        });
+
+        // --- Logout Logic ---
+        document.getElementById('logoutBtn').addEventListener('click', (e) => {
+            e.preventDefault();
+            if(confirm('Apakah Anda yakin ingin keluar?')) {
+                sessionStorage.removeItem('siswa_session');
+                window.location.href = 'index.html';
+            }
+        });
+
+        // --- Accordion Logic ---
+        function toggleAccordion(header) {
+            const item = header.parentElement;
+            const content = item.querySelector('.accordion-content');
+            const isActive = item.classList.contains('active');
+
+            // Tutup semua accordion lain
+            document.querySelectorAll('.accordion-item').forEach(otherItem => {
+                if (otherItem !== item) {
+                    otherItem.classList.remove('active');
+                    otherItem.querySelector('.accordion-content').style.maxHeight = null;
+                }
+            });
+
+            // Toggle accordion yang diklik
+            if (isActive) {
+                item.classList.remove('active');
+                content.style.maxHeight = null;
+            } else {
+                item.classList.add('active');
+                content.style.maxHeight = content.scrollHeight + "px";
+            }
+        }
+
+        // --- Load Riwayat Piket ---
+        async function loadRiwayatPiket(namaSiswa) {
+            const tbody = document.querySelector('#piketTable tbody');
+            if (!tbody) return;
+
+            try {
+                const { data, error } = await supabaseClient
+                    .from('jurnalpiket')
+                    .select('*')
+                    .eq('nama_siswa', namaSiswa)
+                    .order('tanggal', { ascending: false });
+
+                if (error) throw error;
+
+                tbody.innerHTML = '';
+
+                if (!data || data.length === 0) {
+                    tbody.innerHTML = '<tr><td colspan="4" style="text-align:center; padding: 15px; color: #888;">Belum ada riwayat piket.</td></tr>';
+                    return;
+                }
+
+                data.forEach((item, index) => {
+                    const date = new Date(item.tanggal).toLocaleDateString('id-ID', {
+                        weekday: 'long', year: 'numeric', month: 'long', day: 'numeric'
+                    });
+                    
+                    const statusColor = item.status === 'Ya' ? '#10b981' : '#ef4444';
+                    const statusText = item.status === 'Ya' ? 'Melaksanakan' : 'Tidak Melaksanakan';
+
+                    const row = `<tr>
+                        <td>${index + 1}</td>
+                        <td>${date}</td>
+                        <td>${item.area}</td>
+                        <td><span class="status-badge" style="background-color: ${statusColor}; color: white;">${statusText}</span></td>
+                    </tr>`;
+                    tbody.innerHTML += row;
+                });
+            } catch (err) {
+                console.error('Error loading piket:', err);
+                tbody.innerHTML = `<tr><td colspan="4" style="text-align:center; color:red;">Gagal memuat data: ${err.message}</td></tr>`;
+            }
+        }
+
+        // --- Load Absensi Siswa ---
+        async function loadAbsensiSiswa(namaSiswa) {
+            const tbody = document.querySelector('#absensiTable tbody');
+            if (!tbody) return;
+
+            try {
+                const { data, error } = await absensiClient
+                    .from('absensiswa')
+                    .select('*')
+                    .eq('nama_siswa', namaSiswa)
+                    .order('tanggal', { ascending: false });
+
+                if (error) throw error;
+
+                tbody.innerHTML = '';
+
+                if (!data || data.length === 0) {
+                    tbody.innerHTML = '<tr><td colspan="4" style="text-align:center; padding: 15px; color: #888;">Belum ada riwayat kehadiran.</td></tr>';
+                    return;
+                }
+
+                data.forEach((item, index) => {
+                    const date = new Date(item.tanggal).toLocaleDateString('id-ID', {
+                        weekday: 'long', year: 'numeric', month: 'long', day: 'numeric'
+                    });
+                    
+                    let statusColor = '#6b7280';
+                    if (item.status_kehadiran === 'Hadir') statusColor = '#10b981';
+                    else if (item.status_kehadiran === 'Sakit') statusColor = '#3b82f6';
+                    else if (item.status_kehadiran === 'Ijin' || item.status_kehadiran === 'Izin') statusColor = '#f59e0b';
+                    else if (item.status_kehadiran === 'Alpa' || item.status_kehadiran === 'Alpha') statusColor = '#ef4444';
+
+                    const row = `<tr>
+                        <td>${index + 1}</td>
+                        <td>${date}</td>
+                        <td>${item.hari || '-'}</td>
+                        <td><span class="status-badge" style="background-color: ${statusColor}; color: white;">${item.status_kehadiran}</span></td>
+                    </tr>`;
+                    tbody.innerHTML += row;
+                });
+            } catch (err) {
+                console.error('Error loading absensi:', err);
+                tbody.innerHTML = `<tr><td colspan="4" style="text-align:center; color:red;">Gagal memuat data: ${err.message}</td></tr>`;
+            }
+        }
+
+        // --- Load Nilai Siswa ---
+        async function loadNilaiSiswa(namaSiswa) {
+            const tbody = document.querySelector('#nilaiTable tbody');
+            if (!tbody) return;
+
+            try {
+                const { data, error } = await absensiClient
+                    .from('nilaimapel')
+                    .select('*')
+                    .eq('nama_siswa', namaSiswa)
+                    .order('mapel', { ascending: true });
+
+                if (error) throw error;
+
+                tbody.innerHTML = '';
+
+                if (!data || data.length === 0) {
+                    tbody.innerHTML = '<tr><td colspan="15" style="text-align:center; padding: 15px; color: #888;">Belum ada data nilai.</td></tr>';
+                    return;
+                }
+
+                data.forEach((item, index) => {
+                    let statusColor = '#6b7280';
+                    if (item.status === 'Tuntas') statusColor = '#10b981';
+                    else if (item.status === 'Tidak Tuntas') statusColor = '#ef4444';
+
+                    const row = `<tr>
+                        <td>${index + 1}</td>
+                        <td>${item.mapel || '-'}</td>
+                        <td>${item.semester || '-'}</td>
+                        <td>${item.uh1 || '-'}</td>
+                        <td>${item.uh2 || '-'}</td>
+                        <td>${item.uh3 || '-'}</td>
+                        <td>${item.uh4 || '-'}</td>
+                        <td>${item.uh5 || '-'}</td>
+                        <td>${item.uh6 || '-'}</td>
+                        <td>${item.uh7 || '-'}</td>
+                        <td>${item.nh || '-'}</td>
+                        <td>${item.uts || '-'}</td>
+                        <td>${item.us || '-'}</td>
+                        <td>${item.nr || '-'}</td>
+                        <td><span class="status-badge" style="background-color: ${statusColor}; color: white;">${item.status || '-'}</span></td>
+                    </tr>`;
+                    tbody.innerHTML += row;
+                });
+            } catch (err) {
+                console.error('Error loading nilai:', err);
+                tbody.innerHTML = `<tr><td colspan="15" style="text-align:center; color:red;">Gagal memuat data: ${err.message}</td></tr>`;
+            }
+        }
+
+        // --- Load Kasus Siswa ---
+        async function loadKasusSiswa(namaSiswa) {
+            const tbody = document.querySelector('#kasusTable tbody');
+            if (!tbody) return;
+
+            try {
+                const { data, error } = await absensiClient
+                    .from('kasussiswa')
+                    .select('*')
+                    .eq('nama_siswa', namaSiswa)
+                    .order('tanggal', { ascending: false });
+
+                if (error) throw error;
+
+                tbody.innerHTML = '';
+
+                if (!data || data.length === 0) {
+                    tbody.innerHTML = '<tr><td colspan="5" style="text-align:center; padding: 15px; color: #888;">Tidak ada catatan kasus.</td></tr>';
+                    return;
+                }
+
+                data.forEach((item, index) => {
+                    const date = new Date(item.tanggal).toLocaleDateString('id-ID', {
+                        weekday: 'long', year: 'numeric', month: 'long', day: 'numeric'
+                    });
+
+                    const row = `<tr>
+                        <td>${index + 1}</td>
+                        <td>${date}</td>
+                        <td>${item.jenis_kasus || '-'}</td>
+                        <td>${item.mapel || '-'}</td>
+                        <td>${item.nama_guru || '-'}</td>
+                    </tr>`;
+                    tbody.innerHTML += row;
+                });
+            } catch (err) {
+                console.error('Error loading kasus:', err);
+                tbody.innerHTML = `<tr><td colspan="5" style="text-align:center; color:red;">Gagal memuat data: ${err.message}</td></tr>`;
+            }
+        }
+
+        // --- Load Pembinaan Wali ---
+        async function loadPembinaanWali(namaSiswa) {
+            const tbody = document.querySelector('#pembinaanTable tbody');
+            if (!tbody) return;
+
+            try {
+                const { data, error } = await supabaseClient
+                    .from('pembinaanwali')
+                    .select('*')
+                    .eq('nama_siswa', namaSiswa)
+                    .order('tanggal', { ascending: false });
+
+                if (error) throw error;
+
+                tbody.innerHTML = '';
+
+                if (!data || data.length === 0) {
+                    tbody.innerHTML = '<tr><td colspan="5" style="text-align:center; padding: 15px; color: #888;">Belum ada riwayat pembinaan.</td></tr>';
+                    return;
+                }
+
+                data.forEach((item, index) => {
+                    const date = new Date(item.tanggal).toLocaleDateString('id-ID', {
+                        weekday: 'long', year: 'numeric', month: 'long', day: 'numeric'
+                    });
+                    
+                    const photoLink = item.photo ? `<a href="${item.photo}" target="_blank" style="color: var(--primary-color); text-decoration: none;"><i class="fas fa-image"></i> Lihat</a>` : '-';
+
+                    const row = `<tr>
+                        <td>${index + 1}</td>
+                        <td>${date}</td>
+                        <td>${item.kasus || '-'}</td>
+                        <td>${item.guru_wali || '-'}</td>
+                        <td>${photoLink}</td>
+                    </tr>`;
+                    tbody.innerHTML += row;
+                });
+            } catch (err) {
+                console.error('Error loading pembinaan:', err);
+                tbody.innerHTML = `<tr><td colspan="5" style="text-align:center; color:red;">Gagal memuat data: ${err.message}</td></tr>`;
+            }
+        }
+
+        // --- Tab Switch Logic (PKL) ---
+        function switchPklTab(btn, paneId) {
+            const tabContainer = btn.closest('.accordion-body');
+
+            tabContainer.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+            tabContainer.querySelectorAll('.tab-pane').forEach(p => p.classList.remove('active'));
+
+            btn.classList.add('active');
+            tabContainer.querySelector('#' + paneId).classList.add('active');
+
+            // Sesuaikan ulang tinggi accordion karena konten tab berubah
+            const accItem = btn.closest('.accordion-item');
+            const accContent = accItem.querySelector('.accordion-content');
+            if (accItem.classList.contains('active')) {
+                accContent.style.maxHeight = accContent.scrollHeight + "px";
+            }
+        }
+
+        // --- Load Data PKL Siswa (3 Tab) ---
+        function loadPklSiswa(namaSiswa, nisn) {
+            loadPklAbsensi(nisn);
+            loadPklKasus(namaSiswa);
+            loadPklNilai(namaSiswa);
+        }
+
+        // Tab 1: Absensi Kehadiran PKL
+        async function loadPklAbsensi(nisn) {
+            const tbody = document.querySelector('#pklAbsensiTable tbody');
+            if (!tbody) return;
+
+            if (!nisn) {
+                tbody.innerHTML = '<tr><td colspan="6" style="text-align:center; padding: 15px; color: #888;">NISN tidak ditemukan.</td></tr>';
+                return;
+            }
+
+            try {
+                const { data, error } = await absensiClient
+                    .from('absensipkl')
+                    .select('*')
+                    .eq('nisn', nisn)
+                    .order('id', { ascending: true });
+
+                if (error) throw error;
+
+                tbody.innerHTML = '';
+
+                if (!data || data.length === 0) {
+                    tbody.innerHTML = '<tr><td colspan="6" style="text-align:center; padding: 15px; color: #888;">Belum ada riwayat kehadiran PKL.</td></tr>';
+                    return;
+                }
+
+                data.forEach((item, index) => {
+                    const date = item.tanggal ? new Date(item.tanggal).toLocaleDateString('id-ID', {
+                        day: '2-digit', month: 'long', year: 'numeric'
+                    }) : '-';
+
+                    let statusColor = '#6b7280';
+                    if (item.status === 'Hadir') statusColor = '#10b981';
+                    else if (item.status === 'Sakit') statusColor = '#3b82f6';
+                    else if (item.status === 'Izin') statusColor = '#f59e0b';
+                    else if (item.status === 'Tanpa Keterangan') statusColor = '#ef4444';
+
+                    const row = `<tr>
+                        <td>${index + 1}</td>
+                        <td>${item.id || '-'}</td>
+                        <td>${item.nama_siswa || '-'}</td>
+                        <td>${item.nisn || '-'}</td>
+                        <td>${date}</td>
+                        <td><span class="status-badge" style="background-color: ${statusColor}; color: white;">${item.status || '-'}</span></td>
+                    </tr>`;
+                    tbody.innerHTML += row;
+                });
+            } catch (err) {
+                console.error('Error loading absensi PKL:', err);
+                tbody.innerHTML = `<tr><td colspan="6" style="text-align:center; color:red;">Gagal memuat data: ${err.message}</td></tr>`;
+            }
+        }
+
+        // Tab 2: Kasus PKL
+        async function loadPklKasus(namaSiswa) {
+            const tbody = document.querySelector('#pklKasusTable tbody');
+            if (!tbody) return;
+
+            try {
+                const { data, error } = await absensiClient
+                    .from('kasuspkl')
+                    .select('*')
+                    .eq('nama_siswa', namaSiswa)
+                    .order('tanggal', { ascending: false });
+
+                if (error) throw error;
+
+                tbody.innerHTML = '';
+
+                if (!data || data.length === 0) {
+                    tbody.innerHTML = '<tr><td colspan="6" style="text-align:center; padding: 15px; color: #888;">Tidak ada catatan kasus PKL.</td></tr>';
+                    return;
+                }
+
+                data.forEach((item, index) => {
+                    const date = item.tanggal ? new Date(item.tanggal).toLocaleDateString('id-ID', {
+                        day: '2-digit', month: 'long', year: 'numeric'
+                    }) : '-';
+
+                    const row = `<tr>
+                        <td>${index + 1}</td>
+                        <td>${item.id || '-'}</td>
+                        <td>${date}</td>
+                        <td>${item.nama_siswa || '-'}</td>
+                        <td>${item.deskripsi || '-'}</td>
+                        <td>${item.tindak_lanjut || '-'}</td>
+                    </tr>`;
+                    tbody.innerHTML += row;
+                });
+            } catch (err) {
+                console.error('Error loading kasus PKL:', err);
+                tbody.innerHTML = `<tr><td colspan="6" style="text-align:center; color:red;">Gagal memuat data: ${err.message}</td></tr>`;
+            }
+        }
+
+        // Tab 3: Nilai PKL
+        async function loadPklNilai(namaSiswa) {
+            const tbody = document.querySelector('#pklNilaiTable tbody');
+            if (!tbody) return;
+
+            try {
+                const { data, error } = await absensiClient
+                    .from('nilaipkl')
+                    .select('*')
+                    .eq('nama_siswa', namaSiswa)
+                    .order('kode_nilai', { ascending: true });
+
+                if (error) throw error;
+
+                tbody.innerHTML = '';
+
+                if (!data || data.length === 0) {
+                    tbody.innerHTML = '<tr><td colspan="8" style="text-align:center; padding: 15px; color: #888;">Belum ada data nilai PKL.</td></tr>';
+                    return;
+                }
+
+                data.forEach((item, index) => {
+                    const row = `<tr>
+                        <td>${index + 1}</td>
+                        <td>${item.kode_nilai || '-'}</td>
+                        <td>${item.nama_siswa || '-'}</td>
+                        <td>${item.kelas || '-'}</td>
+                        <td>${item.skkni || '-'}</td>
+                        <td>${item.deskripsi_skkni || '-'}</td>
+                        <td>${item.nilai ?? '-'}</td>
+                        <td>${item.deskripsi_nilai || '-'}</td>
+                    </tr>`;
+                    tbody.innerHTML += row;
+                });
+            } catch (err) {
+                console.error('Error loading nilai PKL:', err);
+                tbody.innerHTML = `<tr><td colspan="8" style="text-align:center; color:red;">Gagal memuat data: ${err.message}</td></tr>`;
+            }
+        }
+        // ============================================================
+        // --- Sumbangan Pendidikan Komite Sekolah (Riwayat 12 Bulan) ---
+        // ============================================================
+        const BULAN_AJARAN_LIST = ['Juli','Agustus','September','Oktober','November','Desember',
+                                    'Januari','Februari','Maret','April','Mei','Juni'];
+
+        // Format ke Rupiah, dibulatkan ke atas, tanpa angka desimal/koma
+        function formatRupiah(angka) {
+            const bulat = Math.ceil(parseFloat(angka) || 0);
+            return 'Rp ' + bulat.toLocaleString('id-ID', { maximumFractionDigits: 0 });
+        }
+
+        async function loadSumbanganKomite(namaSiswa, nisn) {
+            const infoEl = document.getElementById('sumbanganLoadingInfo');
+            const navEl = document.getElementById('sumbanganTabNav');
+            const contentEl = document.getElementById('sumbanganTabContent');
+
+            if (!infoEl || !navEl || !contentEl) return;
+
+            if (!nisn) {
+                infoEl.innerHTML = '<i class="fas fa-exclamation-circle" style="color:#fbbf24;"></i> NISN tidak ditemukan.';
+                return;
+            }
+
+            try {
+                // Ambil daftar tahun pelajaran milik siswa ini dari tabel tagihan
+                const { data: tagihanData, error: tagihanError } = await absensiClient
+                    .from('tagihansumbangan')
+                    .select('tahun_pelajaran, nominal_per_bulan')
+                    .eq('nisn', nisn);
+
+                if (tagihanError) throw tagihanError;
+
+                // Unikkan & urutkan tahun pelajaran (terlama -> terbaru)
+                const tahunMap = {};
+                (tagihanData || []).forEach(d => {
+                    if (d.tahun_pelajaran) tahunMap[d.tahun_pelajaran] = d.nominal_per_bulan || 0;
+                });
+                const tahunList = Object.keys(tahunMap).sort();
+
+                if (tahunList.length === 0) {
+                    infoEl.innerHTML = '<i class="fas fa-info-circle" style="color:#06b6d4;"></i> Belum ada data tagihan Sumbangan Komite untuk siswa ini.';
+                    navEl.style.display = 'none';
+                    contentEl.innerHTML = '';
+                    return;
+                }
+
+                // Ambil seluruh riwayat pembayaran (semua tahun) sekaligus untuk siswa ini
+                const { data: bayarData, error: bayarError } = await absensiClient
+                    .from('sumbangankomite')
+                    .select('*')
+                    .eq('nisn', nisn)
+                    .order('tanggal_bayar', { ascending: true });
+
+                if (bayarError) throw bayarError;
+
+                // Kelompokkan data pembayaran per tahun_pelajaran
+                const bayarPerTahun = {};
+                (bayarData || []).forEach(d => {
+                    const t = d.tahun_pelajaran || '';
+                    if (!bayarPerTahun[t]) bayarPerTahun[t] = {};
+                    bayarPerTahun[t][d.bulan_bayar] = d;
+                });
+
+                infoEl.style.display = 'none';
+                renderSumbanganTabs(tahunList, tahunMap, bayarPerTahun);
+
+            } catch (err) {
+                console.error('Error loading sumbangan komite:', err);
+                infoEl.style.display = 'block';
+                infoEl.innerHTML = `<i class="fas fa-exclamation-circle" style="color:#ef4444;"></i> Gagal memuat data: ${err.message}`;
+                navEl.style.display = 'none';
+                contentEl.innerHTML = '';
+            }
+        }
+
+        function renderSumbanganTabs(tahunList, nominalPerTahun, bayarPerTahun) {
+            const navEl = document.getElementById('sumbanganTabNav');
+            const contentEl = document.getElementById('sumbanganTabContent');
+
+            // Bangun navigasi tab. Jika hanya 1 tahun, tab tetap ditampilkan (sebagai label tahun ajaran)
+            navEl.style.display = 'flex';
+            navEl.innerHTML = tahunList.map((tahun, i) => `
+                <button class="tab-btn sk-tab ${i === 0 ? 'active' : ''}" onclick="switchSumbanganTab(this, 'skTahunTab-${i}')">
+                    <i class="fas fa-calendar-alt"></i> ${tahun}
+                </button>
+            `).join('');
+
+            // Bangun isi tab per tahun
+            contentEl.innerHTML = tahunList.map((tahun, i) => {
+                const nominal = parseFloat(nominalPerTahun[tahun]) || 0;
+                const dataBulan = bayarPerTahun[tahun] || {};
+
+                let totalLunas = 0;
+                let totalDibayar = 0;
+
+                const rowsHtml = BULAN_AJARAN_LIST.map((bulan, idx) => {
+                    const existing = dataBulan[bulan] || null;
+                    if (existing) {
+                        totalLunas++;
+                        totalDibayar += parseFloat(existing.nominal) || 0;
+                    }
+                    const tanggal = existing && existing.tanggal_bayar
+                        ? new Date(existing.tanggal_bayar).toLocaleDateString('id-ID', { day: '2-digit', month: 'long', year: 'numeric' })
+                        : '-';
+                    const jumlah = existing ? formatRupiah(existing.nominal) : '-';
+                    const idPembayaran = existing ? (existing.id || '-') : '-';
+                    const statusBadge = existing
+                        ? '<span class="badge-lunas-sk"><i class="fas fa-check-circle"></i> Lunas</span>'
+                        : '<span class="badge-belum-sk"><i class="fas fa-clock"></i> Belum Bayar</span>';
+
+                    return `<tr>
+                        <td style="font-weight:600;">${bulan}</td>
+                        <td>${idPembayaran}</td>
+                        <td>${tanggal}</td>
+                        <td>${jumlah}</td>
+                        <td>${statusBadge}</td>
+                    </tr>`;
+                }).join('');
+
+                const totalTagihan = nominal * 12;
+                const sisaBayar = totalTagihan - totalDibayar;
+
+                return `
+                <div class="tab-pane ${i === 0 ? 'active' : ''}" id="skTahunTab-${i}">
+                    <div class="sumbangan-info">
+                        <i class="fas fa-info-circle" style="color:#06b6d4;"></i>
+                        Tahun Pelajaran <strong>${tahun}</strong> &nbsp;|&nbsp; Nominal/Bulan: <strong>${formatRupiah(nominal)}</strong>
+                        &nbsp;|&nbsp; <strong>${totalLunas} dari 12</strong> bulan sudah dibayar.
+                    </div>
+                    <div class="table-responsive sumbangan-table-wrap">
+                        <table class="custom-table sumbangan-table">
+                            <thead>
+                                <tr>
+                                    <th>Bulan</th>
+                                    <th>ID Pembayaran</th>
+                                    <th>Tanggal Bayar</th>
+                                    <th>Jumlah Bayar</th>
+                                    <th>Status</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                ${rowsHtml}
+                            </tbody>
+                        </table>
+                    </div>
+                    <div class="sumbangan-summary">
+                        <span>Total Dibayar: <strong>${formatRupiah(totalDibayar)}</strong></span>
+                        <span>Sisa Sumbangan Komite: <strong class="sisa-sumbangan">${formatRupiah(Math.max(sisaBayar, 0))}</strong></span>
+                    </div>
+                </div>`;
+            }).join('');
+        }
+
+        // --- Tab Switch Logic (Sumbangan Komite) ---
+        function switchSumbanganTab(btn, paneId) {
+            const tabContainer = btn.closest('.accordion-body');
+
+            tabContainer.querySelectorAll('.sk-tab').forEach(b => b.classList.remove('active'));
+            tabContainer.querySelectorAll('#sumbanganTabContent .tab-pane').forEach(p => p.classList.remove('active'));
+
+            btn.classList.add('active');
+            tabContainer.querySelector('#' + paneId).classList.add('active');
+
+            // Sesuaikan ulang tinggi accordion karena konten tab berubah
+            const accItem = btn.closest('.accordion-item');
+            const accContent = accItem.querySelector('.accordion-content');
+            if (accItem.classList.contains('active')) {
+                accContent.style.maxHeight = accContent.scrollHeight + "px";
+            }
+        }
+    </script>
+</body>
+</html>                           b
