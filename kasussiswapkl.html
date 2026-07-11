@@ -108,6 +108,33 @@
         @media (max-width: 768px) {
             .navbar-brand span { font-size: 1rem; }
             .navbar-date { display: none !important; }
+
+            /* --- Padding kiri-kanan hanya 5px di mobile --- */
+            .main-content {
+                padding: 1rem 5px;
+            }
+
+            .dashboard-card {
+                padding: 15px;
+                width: 100%;
+            }
+
+            .header-stats-grid {
+                gap: 12px;
+            }
+
+            .stat-card {
+                padding: 15px;
+                width: 100%;
+            }
+
+            .tabs-wrapper-header {
+                padding: 12px;
+            }
+
+            .tabs-content {
+                padding: 12px;
+            }
         }
 
         /* ===== MAIN CONTENT ===== */
@@ -118,6 +145,8 @@
             overflow-y: auto;
             -ms-overflow-style: none;
             scrollbar-width: none;
+            max-width: 100%;
+            box-sizing: border-box;
         }
         .main-content::-webkit-scrollbar { display: none; }
 
@@ -128,6 +157,8 @@
             border-radius: 8px;
             box-shadow: 0 2px 5px rgba(0,0,0,0.05);
             margin-bottom: 20px;
+            max-width: 100%;
+            box-sizing: border-box;
         }
 
         .header-stats-grid {
@@ -170,6 +201,8 @@
             box-shadow: 0 2px 8px rgba(0,0,0,0.06);
             margin-bottom: 20px;
             overflow: hidden;
+            max-width: 100%;
+            box-sizing: border-box;
         }
 
         .tabs-wrapper-header {
@@ -288,6 +321,8 @@
             border-radius: 10px;
             padding: 16px;
             margin-bottom: 18px;
+            max-width: 100%;
+            box-sizing: border-box;
         }
 
         .filter-group {
@@ -376,6 +411,7 @@
         @media (max-width: 600px) {
             .filter-group { min-width: 100%; }
             .filter-actions { width: 100%; justify-content: flex-end; }
+            .filter-bar { padding: 12px; gap: 10px; }
         }
 
         /* ===== TABLE ===== */
