@@ -40,6 +40,11 @@
             overflow: hidden; /* Mencegah scroll ganda pada body */
         }
 
+        .main-content, .dashboard-card, .stats-grid {
+            max-width: 100%;
+            box-sizing: border-box;
+        }
+
         /* --- Navbar --- */
         .navbar {
             height: var(--header-height);
@@ -133,6 +138,60 @@
             }
             .navbar-date {
                 display: none !important;
+            }
+
+            /* --- Padding kiri-kanan hanya 5px di mobile --- */
+            .main-content {
+                padding: 1rem 5px;
+            }
+
+            .dashboard-card {
+                padding: 15px;
+                width: 100%;
+            }
+
+            .stats-grid {
+                grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+                gap: 10px;
+                width: 100%;
+            }
+
+            .stat-card {
+                padding: 12px;
+                min-width: 0; /* cegah card memaksa grid melebar & terpotong */
+            }
+
+            /* Header tabel: judul, tombol export, dan search jadi rapi & tidak keluar kontainer */
+            .dashboard-card > div[style*="justify-content: space-between"] {
+                flex-direction: column;
+                align-items: stretch !important;
+            }
+
+            .dashboard-card > div[style*="justify-content: space-between"] > div {
+                width: 100%;
+                flex-wrap: wrap;
+            }
+
+            #searchPembinaan {
+                width: 100% !important;
+                box-sizing: border-box;
+            }
+
+            .btn-danger {
+                flex: 1;
+                justify-content: center;
+            }
+
+            .table-responsive {
+                width: 100%;
+                max-width: 100%;
+                overflow-x: auto;
+                -webkit-overflow-scrolling: touch;
+            }
+
+            .custom-table th,
+            .custom-table td {
+                padding: 10px 12px;
             }
         }
 
