@@ -102,6 +102,8 @@
             flex: 1;
             overflow-y: auto;
             transition: margin-left 0.3s ease;
+            max-width: 100%;
+            box-sizing: border-box;
         }
 
         .sidebar.active ~ .main-content {
@@ -114,6 +116,8 @@
             border-radius: 8px;
             box-shadow: 0 2px 5px rgba(0,0,0,0.05);
             margin-bottom: 20px;
+            max-width: 100%;
+            box-sizing: border-box;
         }
 
         /* Footer */
@@ -132,6 +136,60 @@
             }
             .navbar-date {
                 display: none !important;
+            }
+
+            /* --- Padding kiri-kanan hanya 5px di mobile --- */
+            .main-content {
+                padding: 1rem 5px;
+            }
+
+            .dashboard-card {
+                padding: 15px;
+                width: 100%;
+            }
+
+            .stats-grid {
+                grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+                gap: 10px;
+                width: 100%;
+            }
+
+            .stat-card {
+                padding: 12px;
+                min-width: 0;
+            }
+
+            /* Header tabel: judul, tombol export, dan search jadi rapi & tidak keluar kontainer */
+            .dashboard-card > div[style*="justify-content: space-between"] {
+                flex-direction: column;
+                align-items: stretch !important;
+            }
+
+            .dashboard-card > div[style*="justify-content: space-between"] > div {
+                width: 100%;
+                flex-wrap: wrap;
+            }
+
+            #searchDispensasi {
+                width: 100% !important;
+                box-sizing: border-box;
+            }
+
+            .btn-danger {
+                flex: 1;
+                justify-content: center;
+            }
+
+            .table-responsive {
+                width: 100%;
+                max-width: 100%;
+                overflow-x: auto;
+                -webkit-overflow-scrolling: touch;
+            }
+
+            .custom-table th,
+            .custom-table td {
+                padding: 10px 12px;
             }
         }
 
