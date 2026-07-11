@@ -96,6 +96,8 @@
             padding: 2rem;
             flex: 1;
             overflow-y: auto;
+            max-width: 100%;
+            box-sizing: border-box;
         }
 
         .dashboard-card {
@@ -104,6 +106,8 @@
             border-radius: 8px;
             box-shadow: 0 2px 5px rgba(0,0,0,0.05);
             margin-bottom: 20px;
+            max-width: 100%;
+            box-sizing: border-box;
         }
 
         /* Footer */
@@ -119,6 +123,83 @@
         @media (max-width: 768px) {
             .navbar-brand span {
                 font-size: 1rem;
+            }
+
+            /* --- Padding kiri-kanan hanya 5px di mobile --- */
+            .main-content {
+                padding: 1rem 5px;
+            }
+
+            .dashboard-card {
+                padding: 15px;
+                width: 100%;
+            }
+
+            /* Summary cards */
+            .summary-grid {
+                grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+                gap: 10px;
+            }
+
+            .summary-card {
+                padding: 14px;
+                min-width: 0;
+            }
+
+            /* Search + tombol export: jadi vertikal & full width supaya tidak terpotong */
+            .search-container {
+                flex-direction: column;
+                align-items: stretch;
+                gap: 10px;
+            }
+
+            .search-input {
+                width: 100%;
+                box-sizing: border-box;
+            }
+
+            .search-container .btn-danger {
+                margin-left: 0 !important;
+                justify-content: center;
+                width: 100%;
+            }
+
+            .table-responsive {
+                width: 100%;
+                max-width: 100%;
+                overflow-x: auto;
+                -webkit-overflow-scrolling: touch;
+            }
+
+            .custom-table th,
+            .custom-table td {
+                padding: 10px 12px;
+            }
+
+            .tabs-header {
+                gap: 8px;
+            }
+
+            .tab-btn {
+                padding: 8px 14px;
+                font-size: 0.85rem;
+            }
+
+            /* Modal detail nilai: 1 kolom biar tidak sempit/terpotong */
+            .modal-content {
+                width: 92%;
+                padding: 18px;
+            }
+
+            .detail-grid {
+                grid-template-columns: 1fr;
+                gap: 10px;
+            }
+
+            .grade-table th,
+            .grade-table td {
+                padding: 6px;
+                font-size: 0.8rem;
             }
         }
         
