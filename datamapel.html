@@ -152,6 +152,38 @@
             .navbar-brand span {
                 font-size: 1rem; /* Sedikit lebih kecil di HP */
             }
+
+            .main-content {
+                padding: 2rem 5px;
+            }
+
+            .dashboard-card {
+                padding: 15px;
+            }
+
+            .modal-content {
+                width: calc(100% - 10px);
+                margin: 0 5px;
+                padding: 15px;
+            }
+
+            .modal-footer {
+                flex-wrap: wrap;
+            }
+
+            .modal-footer .btn {
+                flex: 1 1 auto;
+                justify-content: center;
+            }
+
+            .mapel-toolbar #btnTambahMapel,
+            .mapel-search {
+                width: 100%;
+            }
+
+            .mapel-search input {
+                width: 100%;
+            }
         }
     </style>
 </head>
@@ -177,9 +209,9 @@
         
         <!-- Container Tabel Data Mapel -->
         <div class="dashboard-card">
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 10px;">
+            <div class="mapel-toolbar" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 10px;">
                 <button class="btn btn-primary" id="btnTambahMapel"><i class="fas fa-plus"></i> Tambah Mapel</button>
-                <div style="display: flex; gap: 10px;">
+                <div class="mapel-search" style="display: flex; gap: 10px;">
                     <input type="text" placeholder="Cari Mapel..." style="padding: 8px; border: 1px solid #ddd; border-radius: 5px;">
                 </div>
             </div>
