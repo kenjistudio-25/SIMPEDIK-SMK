@@ -502,9 +502,53 @@
         @media (max-width: 768px) {
             .navbar-brand span { font-size: 0.9rem; }
             .navbar-date { display: none !important; }
-            .main-content { padding: 1rem; }
+            .main-content { padding: 1rem 5px; }
             .form-row { grid-template-columns: 1fr; }
             .page-title { font-size: 1.1rem; }
+
+            .card {
+                padding: 15px;
+            }
+
+            .modal-box {
+                width: calc(100% - 10px);
+                margin: 0 5px;
+            }
+
+            .modal-header {
+                padding: 14px 16px;
+            }
+
+            .modal-body {
+                padding: 16px;
+            }
+
+            .modal-footer {
+                padding: 14px 16px;
+                flex-wrap: wrap;
+            }
+
+            .modal-footer .btn-cancel,
+            .modal-footer .btn-simpan {
+                flex: 1 1 auto;
+                justify-content: center;
+            }
+
+            .toast {
+                left: 5px;
+                right: 5px;
+                bottom: 12px;
+                width: auto;
+            }
+
+            .page-header {
+                width: 100%;
+            }
+
+            .btn-tambah {
+                width: 100%;
+                justify-content: center;
+            }
         }
     </style>
 </head>
