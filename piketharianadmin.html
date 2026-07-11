@@ -140,22 +140,25 @@
             }
 
             .piket-toolbar {
-                flex-direction: column;
-                align-items: stretch;
+                flex-direction: row;
+                align-items: center;
+                flex-wrap: nowrap;
+                gap: 10px;
             }
 
             .piket-actions {
-                justify-content: center;
-            }
-
-            .piket-actions .btn {
-                flex: 1 1 auto;
-                justify-content: center;
+                justify-content: flex-end;
+                flex-wrap: nowrap;
+                flex-shrink: 0;
+                order: 2;
             }
 
             .search-box {
-                width: 100%;
-                margin-top: 10px;
+                flex: 1 1 auto;
+                width: auto;
+                margin-top: 0;
+                min-width: 0;
+                order: 1;
             }
             .search-box input {
                 width: 100%;
@@ -207,6 +210,11 @@
             display: flex;
             gap: 10px;
             flex-wrap: wrap;
+        }
+
+        .piket-actions .btn {
+            padding: 10px 14px;
+            font-size: 1rem;
         }
 
         /* --- Table Responsive Styles --- */
@@ -313,8 +321,8 @@
         <div class="dashboard-card">
             <div class="piket-toolbar">
                 <div class="piket-actions">
-                    <button class="btn btn-primary" id="refreshBtn"><i class="fas fa-sync-alt"></i> Refresh</button>
-                    <button class="btn btn-danger" id="exportPdfBtn"><i class="fas fa-file-pdf"></i> Export Pdf</button>
+                    <button class="btn btn-primary" id="refreshBtn" title="Refresh" aria-label="Refresh"><i class="fas fa-sync-alt"></i></button>
+                    <button class="btn btn-danger" id="exportPdfBtn" title="Export Pdf" aria-label="Export Pdf"><i class="fas fa-file-pdf"></i></button>
                 </div>
                 <div class="search-box">
                     <input type="text" id="searchInput" placeholder="Cari data...">
