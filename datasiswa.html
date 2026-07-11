@@ -159,6 +159,23 @@
         .custom-table th { background-color: #f8f9fa; color: #555; font-weight: 600; }
         .custom-table tr:hover { background-color: #f9f9f9; }
 
+        /* --- Toolbar Tombol (Tambah/Import/Export) --- */
+        .toolbar-wrap {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+        .toolbar-left, .toolbar-right {
+            display: flex;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+        .toolbar-right { justify-content: flex-end; }
+
         /* --- Modal Styles --- */
         .modal { display: none; position: fixed; z-index: 2000; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.6); backdrop-filter: blur(4px); align-items: center; justify-content: center; }
         .modal.active { display: flex; }
@@ -196,7 +213,18 @@
             position: absolute; left: 12px; top: 50%; 
             transform: translateY(-50%); color: #999; 
         }
-        @media (max-width: 768px) { .search-box { width: 100%; margin-top: 10px; } }
+        @media (max-width: 768px) {
+            .search-box { width: 100%; margin-top: 10px; }
+
+            .toolbar-left, .toolbar-right {
+                width: 100%;
+                justify-content: center;
+            }
+            .toolbar-left .btn, .toolbar-right .btn {
+                flex: 1 1 auto;
+                justify-content: center;
+            }
+        }
     </style>
 </head>
 <body>
@@ -221,15 +249,15 @@
         
         <!-- Container Tabel Data Siswa -->
         <div class="dashboard-card">
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 10px;">
-                <div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
+            <div class="toolbar-wrap">
+                <div class="toolbar-left">
                     <button class="btn btn-primary" id="addSiswaBtn"><i class="fas fa-plus"></i> Tambah Siswa</button>
                     <div class="search-box" title="Cari data siswa">
                         <i class="fas fa-search"></i>
                         <input type="text" id="searchInput" placeholder="Cari NISN atau Nama...">
                     </div>
                 </div>
-                <div style="display: flex; gap: 10px;">
+                <div class="toolbar-right">
                     <button class="btn btn-success" id="importBtn"><i class="fas fa-file-import"></i> Import CSV/Excel</button>
                     <button class="btn btn-secondary" id="downloadTemplateBtn"><i class="fas fa-file-excel"></i> Download Template</button>
                     <button class="btn btn-danger" id="exportPdfBtn"><i class="fas fa-file-pdf"></i> Export Pdf</button>
