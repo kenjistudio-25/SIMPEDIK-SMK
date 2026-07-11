@@ -104,6 +104,37 @@
             .navbar-brand span {
                 font-size: 1rem;
             }
+
+            .main-content {
+                padding: 2rem 5px;
+            }
+
+            .dashboard-card {
+                padding: 15px;
+            }
+
+            .toolbar-wrap {
+                justify-content: center;
+            }
+
+            .toolbar-wrap .btn {
+                flex: 1 1 auto;
+                justify-content: center;
+            }
+
+            .modal-content {
+                width: calc(100% - 10px);
+                margin: 0 5px;
+            }
+
+            .modal-footer {
+                flex-wrap: wrap;
+            }
+
+            .modal-footer .btn {
+                flex: 1 1 auto;
+                justify-content: center;
+            }
         }
 
         /* --- Styles Tambahan untuk Tabel dan Tombol --- */
@@ -130,6 +161,13 @@
         .custom-table th, .custom-table td { padding: 12px 15px; text-align: left; border-bottom: 1px solid #eee; }
         .custom-table th { background-color: #f8f9fa; color: #555; font-weight: 600; }
         .custom-table tr:hover { background-color: #f9f9f9; }
+
+        .toolbar-wrap {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
 
         /* --- Modal Styles --- */
         .modal { display: none; position: fixed; z-index: 2000; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.6); backdrop-filter: blur(4px); align-items: center; justify-content: center; }
@@ -174,7 +212,7 @@
         
         <!-- Container Tabel Data Guru Wali -->
         <div class="dashboard-card">
-            <div style="display: flex; gap: 10px; margin-bottom: 20px;">
+            <div class="toolbar-wrap">
                 <button class="btn btn-primary" id="addGuruWaliBtn"><i class="fas fa-plus"></i> Tambah Guru Wali</button>
                 <button class="btn btn-danger" id="exportPdfBtn"><i class="fas fa-file-pdf"></i> Export Pdf</button>
             </div>
