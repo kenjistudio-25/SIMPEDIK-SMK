@@ -98,6 +98,7 @@
             max-width: 1200px;
             margin-left: auto;
             margin-right: auto;
+            box-sizing: border-box;
         }
 
         /* Page Header */
@@ -171,6 +172,8 @@
             border-radius: 12px;
             box-shadow: 0 2px 8px rgba(0,0,0,0.05);
             margin-bottom: 1.2rem;
+            max-width: 100%;
+            box-sizing: border-box;
         }
 
         .card-title {
@@ -297,6 +300,8 @@
             padding: 18px 22px;
             margin-bottom: 1.2rem;
             box-shadow: 0 4px 16px rgba(30,58,138,0.25);
+            max-width: 100%;
+            box-sizing: border-box;
         }
         .saldo-item {
             display: flex;
@@ -458,12 +463,33 @@
         }
 
         @media (max-width: 768px) {
-            .main-content { padding: 1rem 0.5rem; }
-            .stats-grid { grid-template-columns: 1fr 1fr; }
-            .saldo-banner { flex-direction: column; align-items: stretch; }
+            /* --- Padding kiri-kanan hanya 5px di mobile --- */
+            .main-content { padding: 1rem 5px; }
+
+            .stats-grid { grid-template-columns: 1fr 1fr; gap: 10px; }
+
+            .saldo-banner { flex-direction: column; align-items: stretch; padding: 16px; }
             .saldo-item { width: 100%; }
             .saldo-item + .saldo-item { border-left: none; padding-left: 0; border-top: 1px solid rgba(255,255,255,0.22); padding-top: 12px; }
             .saldo-item.is-final { text-align: left; }
+
+            .dashboard-card { padding: 14px; width: 100%; }
+            .stat-card { padding: 14px; }
+
+            .card-title { padding-bottom: 8px; margin-bottom: 12px; }
+
+            .toolbar { gap: 8px; }
+            .search-box { min-width: 100%; flex-basis: 100%; }
+            .filter-select { flex: 1; min-width: 0; }
+
+            .table-wrap { width: 100%; max-width: 100%; }
+
+            thead th, tbody td { padding: 9px 10px; }
+
+            .pdf-body { padding: 16px; }
+            .struk-kop { flex-wrap: wrap; justify-content: center; gap: 8px; text-align: center; }
+            .pdf-summary { justify-content: flex-start; }
+            .pdf-summary-box { min-width: 130px; flex: 1; }
         }
 
         /* Print styles */
