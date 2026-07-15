@@ -465,10 +465,19 @@
         }
 
         @media (max-width: 768px) {
-            .main-content { padding: 0 0.5rem 2rem; }
-            .stats-grid { grid-template-columns: 1fr 1fr; }
+            .main-content { padding: 0 5px 2rem; }
+            .stats-grid { grid-template-columns: 1fr 1fr; gap: 8px; }
             .toolbar { gap: 6px; }
             .navbar-brand span { font-size: 0.95rem; }
+
+            /* Cegah elemen terpotong: samakan padding kiri-kanan jadi 5px */
+            .dashboard-card { padding-left: 5px; padding-right: 5px; }
+            .stat-card { padding-left: 5px; padding-right: 5px; }
+            .preview-card { padding-left: 5px; padding-right: 5px; }
+            .preview-summary { gap: 8px; }
+            .table-wrap { margin-left: 0; margin-right: 0; }
+            thead th, tbody td { padding-left: 5px; padding-right: 5px; }
+            .toast { left: 5px; right: 5px; max-width: none; }
         }
     </style>
 </head>
