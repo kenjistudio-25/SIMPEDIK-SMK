@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SIMPPEDIK-SMKN 1 Mentok</title>
+    <title>Neraca Komite</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
     <style>
@@ -98,7 +98,6 @@
             max-width: 1200px;
             margin-left: auto;
             margin-right: auto;
-            box-sizing: border-box;
         }
 
         /* Page Header */
@@ -172,8 +171,6 @@
             border-radius: 12px;
             box-shadow: 0 2px 8px rgba(0,0,0,0.05);
             margin-bottom: 1.2rem;
-            max-width: 100%;
-            box-sizing: border-box;
         }
 
         .card-title {
@@ -194,7 +191,7 @@
             display: flex; align-items: center; gap: 8px;
         }
 
-        .card-title i { color: var(--primary-color); }
+        .card-title i { color: #1d4ed8; }
 
         /* Toolbar */
         .toolbar {
@@ -300,8 +297,6 @@
             padding: 18px 22px;
             margin-bottom: 1.2rem;
             box-shadow: 0 4px 16px rgba(30,58,138,0.25);
-            max-width: 100%;
-            box-sizing: border-box;
         }
         .saldo-item {
             display: flex;
@@ -315,6 +310,13 @@
             padding-left: 22px;
         }
         .saldo-item.is-final { text-align: right; }
+        .saldo-item-head {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+        .saldo-item.is-final .saldo-item-head { justify-content: flex-end; }
         .saldo-label {
             font-size: 0.8rem;
             opacity: 0.85;
@@ -329,6 +331,40 @@
         }
         .saldo-item.is-final .saldo-value { font-size: 1.9rem; }
         .saldo-value.negative { color: #fecaca; }
+
+        .saldo-breakdown {
+            margin-top: 6px;
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+        }
+        .saldo-breakdown span {
+            font-size: 0.7rem;
+            opacity: 0.88;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+        .saldo-breakdown strong { font-weight: 700; }
+        .saldo-dot { width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0; }
+        .saldo-dot-green  { background: #4ade80; }
+        .saldo-dot-purple { background: #c4b5fd; }
+
+        .btn-edit-saldo-awal {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 22px; height: 22px;
+            border-radius: 50%;
+            background: rgba(255,255,255,0.2);
+            color: white;
+            border: none;
+            cursor: pointer;
+            font-size: 0.72rem;
+            transition: background 0.2s;
+            flex-shrink: 0;
+        }
+        .btn-edit-saldo-awal:hover { background: rgba(255,255,255,0.36); }
 
         /* Table */
         .table-wrap {
@@ -463,33 +499,36 @@
         }
 
         @media (max-width: 768px) {
-            /* --- Padding kiri-kanan hanya 5px di mobile --- */
-            .main-content { padding: 1rem 5px; }
-
-            .stats-grid { grid-template-columns: 1fr 1fr; gap: 10px; }
-
-            .saldo-banner { flex-direction: column; align-items: stretch; padding: 16px; }
+            .main-content { padding: 1rem 0.5rem; }
+            .stats-grid { grid-template-columns: 1fr; }
+            .saldo-banner { flex-direction: column; align-items: stretch; }
             .saldo-item { width: 100%; }
             .saldo-item + .saldo-item { border-left: none; padding-left: 0; border-top: 1px solid rgba(255,255,255,0.22); padding-top: 12px; }
             .saldo-item.is-final { text-align: left; }
-
-            .dashboard-card { padding: 14px; width: 100%; }
-            .stat-card { padding: 14px; }
-
-            .card-title { padding-bottom: 8px; margin-bottom: 12px; }
-
-            .toolbar { gap: 8px; }
-            .search-box { min-width: 100%; flex-basis: 100%; }
-            .filter-select { flex: 1; min-width: 0; }
-
-            .table-wrap { width: 100%; max-width: 100%; }
-
-            thead th, tbody td { padding: 9px 10px; }
-
-            .pdf-body { padding: 16px; }
-            .struk-kop { flex-wrap: wrap; justify-content: center; gap: 8px; text-align: center; }
-            .pdf-summary { justify-content: flex-start; }
-            .pdf-summary-box { min-width: 130px; flex: 1; }
+            .saldo-item.is-final .saldo-item-head { justify-content: flex-start; }
+            .toolbar {
+                flex-direction: column;
+                align-items: stretch;
+            }
+            .search-box {
+                min-width: unset;
+                width: 100%;
+            }
+            .filter-select {
+                width: 100%;
+            }
+            .btn-export-pdf {
+                width: 100%;
+                justify-content: center;
+            }
+            .card-title-actions {
+                flex-direction: column;
+                width: 100%;
+            }
+            .card-title-actions button {
+                width: 100%;
+                justify-content: center;
+            }
         }
 
         /* Print styles */
@@ -666,6 +705,137 @@
         .ttd-label { margin-bottom: 4px; }
         .ttd-space { height: 50px; }
         .ttd-name { font-weight: 700; border-top: 1px solid #374151; padding-top: 4px; }
+
+        /* Modal Update Saldo Awal */
+        .modal-saldo-overlay {
+            display: none;
+            position: fixed;
+            z-index: 3100;
+            left: 0; top: 0;
+            width: 100%; height: 100%;
+            background: rgba(0,0,0,0.6);
+            backdrop-filter: blur(6px);
+            align-items: center;
+            justify-content: center;
+            padding: 10px;
+        }
+        .modal-saldo-overlay.active { display: flex; }
+
+        .saldo-box {
+            background: white;
+            width: 100%;
+            max-width: 420px;
+            border-radius: 14px;
+            box-shadow: 0 24px 60px rgba(0,0,0,0.35);
+            animation: slideDown 0.3s ease;
+            overflow: hidden;
+        }
+
+        .saldo-header-bar {
+            background: linear-gradient(135deg, #1e3a8a, #1d4ed8);
+            padding: 14px 20px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            color: white;
+        }
+        .saldo-header-bar h3 {
+            font-size: 0.92rem;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .btn-close-saldo {
+            background: rgba(255,255,255,0.2);
+            border: none;
+            color: white;
+            width: 28px; height: 28px;
+            border-radius: 50%;
+            font-size: 1rem;
+            cursor: pointer;
+            display: flex; align-items: center; justify-content: center;
+            transition: background 0.2s;
+        }
+        .btn-close-saldo:hover { background: rgba(255,255,255,0.4); }
+
+        .saldo-body {
+            padding: 22px 24px;
+        }
+        .saldo-body label {
+            display: block;
+            font-size: 0.82rem;
+            font-weight: 600;
+            color: #374151;
+            margin-bottom: 6px;
+        }
+        .saldo-input-wrap {
+            position: relative;
+            margin-bottom: 6px;
+        }
+        .saldo-input-wrap span {
+            position: absolute;
+            left: 12px; top: 50%;
+            transform: translateY(-50%);
+            color: #64748b;
+            font-size: 0.9rem;
+            font-weight: 600;
+        }
+        .saldo-body input[type="text"] {
+            width: 100%;
+            padding: 10px 12px 10px 38px;
+            border: 1.5px solid #ddd;
+            border-radius: 8px;
+            font-size: 0.95rem;
+            font-weight: 600;
+            color: #1e3a8a;
+            font-family: inherit;
+            transition: border-color 0.2s, box-shadow 0.2s;
+        }
+        .saldo-body input[type="text"]:focus {
+            outline: none;
+            border-color: #1d4ed8;
+            box-shadow: 0 0 0 3px rgba(29,78,216,0.12);
+        }
+        .saldo-hint {
+            font-size: 0.76rem;
+            color: #94a3b8;
+            margin-top: 4px;
+        }
+        .saldo-footer {
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+            padding: 16px 24px 20px;
+            border-top: 1px solid #f1f5f9;
+        }
+        .btn-cancel-saldo {
+            padding: 9px 18px;
+            border-radius: 8px;
+            border: 1.5px solid #ddd;
+            background: white;
+            color: #555;
+            font-size: 0.86rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: border-color 0.2s, color 0.2s;
+        }
+        .btn-cancel-saldo:hover { border-color: #94a3b8; color: #1e293b; }
+        .btn-save-saldo {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 9px 18px;
+            border-radius: 8px;
+            border: none;
+            background: linear-gradient(135deg, #1d4ed8, #1e3a8a);
+            color: white;
+            font-size: 0.86rem;
+            font-weight: 600;
+            cursor: pointer;
+            box-shadow: 0 3px 10px rgba(29,78,216,0.3);
+            transition: opacity 0.2s, transform 0.2s;
+        }
+        .btn-save-saldo:hover { opacity: 0.9; transform: translateY(-1px); }
     </style>
 </head>
 <body>
@@ -697,19 +867,28 @@
         <!-- Saldo Banner -->
         <div class="saldo-banner">
             <div class="saldo-item">
-                <div class="saldo-label">Saldo Awal</div>
+                <div class="saldo-item-head">
+                    <span class="saldo-label">Saldo Awal</span>
+                    <button class="btn-edit-saldo-awal" onclick="openSaldoAwalModal()" title="Update Saldo Awal">
+                        <i class="fas fa-pen"></i>
+                    </button>
+                </div>
                 <div class="saldo-value" id="saldoAwal">Rp 0</div>
             </div>
             <div class="saldo-item">
-                <div class="saldo-label">Total Pemasukan</div>
+                <div class="saldo-item-head"><span class="saldo-label">Total Pemasukan</span></div>
                 <div class="saldo-value" id="bdMasuk">Rp 0</div>
+                <div class="saldo-breakdown">
+                    <span><span class="saldo-dot saldo-dot-green"></span> Tahun Berjalan: <strong id="bdMasukBerjalan">Rp 0</strong></span>
+                    <span><span class="saldo-dot saldo-dot-purple"></span> Tahun Sebelumnya: <strong id="bdMasukSebelumnya">Rp 0</strong></span>
+                </div>
             </div>
             <div class="saldo-item">
-                <div class="saldo-label">Total Pengeluaran</div>
+                <div class="saldo-item-head"><span class="saldo-label">Total Pengeluaran</span></div>
                 <div class="saldo-value" id="bdKeluar">Rp 0</div>
             </div>
             <div class="saldo-item is-final">
-                <div class="saldo-label">Saldo Akhir Kas Komite</div>
+                <div class="saldo-item-head"><span class="saldo-label">Saldo Akhir Kas Komite</span></div>
                 <div class="saldo-value" id="saldoAkhir">Rp 0</div>
             </div>
         </div>
@@ -766,7 +945,7 @@
                     <i class="fas fa-list-ul"></i>
                     <span>Riwayat Arus Kas (Buku Besar)</span>
                 </div>
-                <div style="display:flex;gap:8px;flex-wrap:wrap;">
+                <div class="card-title-actions" style="display:flex;gap:8px;flex-wrap:wrap;">
                     <button class="btn-export-pdf" onclick="exportPdf()">
                         <i class="fas fa-file-pdf"></i> Export PDF
                     </button>
@@ -839,6 +1018,28 @@
         </div>
     </div>
 
+    <!-- Modal Update Saldo Awal -->
+    <div class="modal-saldo-overlay" id="modalSaldoAwal">
+        <div class="saldo-box">
+            <div class="saldo-header-bar">
+                <h3><i class="fas fa-coins"></i> Update Saldo Awal</h3>
+                <button class="btn-close-saldo" onclick="closeSaldoAwalModal()"><i class="fas fa-times"></i></button>
+            </div>
+            <div class="saldo-body">
+                <label for="inputSaldoAwal">Nominal Saldo Awal</label>
+                <div class="saldo-input-wrap">
+                    <span>Rp</span>
+                    <input type="text" id="inputSaldoAwal" placeholder="0" inputmode="numeric" oninput="formatSaldoAwalInput(this)">
+                </div>
+                <div class="saldo-hint">Saldo awal akan ditambahkan ke perhitungan saldo akhir kas komite.</div>
+            </div>
+            <div class="saldo-footer">
+                <button class="btn-cancel-saldo" onclick="closeSaldoAwalModal()">Cancel</button>
+                <button class="btn-save-saldo" onclick="saveSaldoAwal()"><i class="fas fa-check"></i> Simpan</button>
+            </div>
+        </div>
+    </div>
+
     <!-- Toast -->
     <div class="toast" id="toast"></div>
 
@@ -847,12 +1048,12 @@
         // =============================================
         // Supabase Init
         // =============================================
-        const SUPA_URL = 'https://ixccpgfllwerlifpcpdp.supabase.co';
-        const SUPA_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Iml4Y2NwZ2ZsbHdlcmxpZnBjcGRwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODI4NTE3MTEsImV4cCI6MjA5ODQyNzcxMX0.CwrrPcl0RkDK4zRWhfp7oTqwNlxOIZIb3IGUUzKTE9Q';
+        const SUPA_URL = 'https://ctbskvysuqecnaopqlam.supabase.co';
+        const SUPA_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImN0YnNrdnlzdXFlY25hb3BxbGFtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzA5NTAwODksImV4cCI6MjA4NjUyNjA4OX0.npr4SV6s8XFxXek0R0jNvdhlnIZrdTqrNvWGYVtMAcY';
         const db = supabase.createClient(SUPA_URL, SUPA_KEY);
 
-        const simpedikUrl = 'https://ixccpgfllwerlifpcpdp.supabase.co';
-        const simpedikKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Iml4Y2NwZ2ZsbHdlcmxpZnBjcGRwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODI4NTE3MTEsImV4cCI6MjA5ODQyNzcxMX0.CwrrPcl0RkDK4zRWhfp7oTqwNlxOIZIb3IGUUzKTE9Q';
+        const simpedikUrl = 'https://mjvobqfcoutazqcovtlp.supabase.co';
+        const simpedikKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1qdm9icWZjb3V0YXpxY292dGxwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzA1NzEwMzYsImV4cCI6MjA4NjE0NzAzNn0.jz6JaC9mMTMhLVhXSh1OCnFWDPZ0Cy2tUnHEmWxAR8o';
         const simpedikClient = supabase.createClient(simpedikUrl, simpedikKey);
 
         // =============================================
@@ -865,7 +1066,8 @@
         let chartInstance = null;
         const PAGE_SIZE = 15;
         let currentPage = 1;
-        let saldoAwal = 0; // diambil dari tabel 'saldoawal' (hanya tampilan, tidak ada input di halaman ini)
+        let saldoAwal = 0;
+        let saldoAwalId = null; // id baris di tabel 'saldoawal', null jika belum ada data (berarti insert baru)
 
         document.getElementById('yearNow').textContent = new Date().getFullYear();
 
@@ -894,18 +1096,25 @@
         }
 
         // =============================================
-        // Load Saldo Awal (tabel: saldoawal) - hanya tampilan
+        // Load Saldo Awal (tabel: saldoawal)
         // =============================================
         async function loadSaldoAwal() {
             try {
                 const { data, error } = await db
                     .from('saldoawal')
-                    .select('jumlah_saldo')
+                    .select('id, jumlah_saldo')
                     .limit(1)
                     .maybeSingle();
                 if (error) throw error;
-                saldoAwal = data ? (parseFloat(data.jumlah_saldo) || 0) : 0;
+                if (data) {
+                    saldoAwalId = data.id;
+                    saldoAwal = parseFloat(data.jumlah_saldo) || 0;
+                } else {
+                    saldoAwalId = null;
+                    saldoAwal = 0;
+                }
             } catch(e) {
+                saldoAwalId = null;
                 saldoAwal = 0;
             }
         }
@@ -917,20 +1126,35 @@
             try {
                 await loadSaldoAwal();
 
-                const [masukRes, keluarRes] = await Promise.all([
+                const [masukRes, masukTSRes, keluarRes] = await Promise.all([
                     db.from('sumbangankomite').select('*'),
+                    db.from('ipptahunsebelumnya').select('*'),
                     db.from('pengeluaransumbangan').select('*')
                 ]);
 
                 if (masukRes.error) throw masukRes.error;
+                if (masukTSRes.error) throw masukTSRes.error;
                 if (keluarRes.error) throw keluarRes.error;
 
                 const masuk = (masukRes.data || []).map(d => ({
                     tanggal: d.tanggal_bayar,
                     jenis: 'masuk',
+                    sumber: 'berjalan',
                     keterangan: d.nama_siswa ? `Pembayaran sumbangan - ${d.nama_siswa}${d.kelas ? ' ('+d.kelas+')' : ''}${d.bulan_bayar ? ' - ' + d.bulan_bayar : ''}` : (d.keterangan || 'Pemasukan sumbangan'),
                     nominal: parseFloat(d.nominal) || 0
                 }));
+
+                const masukTS = (masukTSRes.data || []).map(d => {
+                    const nominalBulan = parseFloat(d.nominal_bulan) || 0;
+                    const jumlahBulan  = parseFloat(d.jumlah_bulan) || 0;
+                    return {
+                        tanggal: d.tanggal_bayar,
+                        jenis: 'masuk',
+                        sumber: 'sebelumnya',
+                        keterangan: `Pembayaran sumbangan (Tahun Sebelumnya) - ${d.nama_siswa || '-'}${d.bulan_bayar ? ' - ' + d.bulan_bayar : ''}`,
+                        nominal: nominalBulan * jumlahBulan
+                    };
+                });
 
                 const keluar = (keluarRes.data || []).map(d => ({
                     tanggal: d.tanggal_pengeluaran,
@@ -939,7 +1163,7 @@
                     nominal: parseFloat(d.total_pengeluaran) || 0
                 }));
 
-                let combined = [...masuk, ...keluar].filter(d => d.tanggal);
+                let combined = [...masuk, ...masukTS, ...keluar].filter(d => d.tanggal);
 
                 // Urutkan ASC by tanggal untuk hitung saldo berjalan, lalu beri saldo
                 combined.sort((a, b) => new Date(a.tanggal) - new Date(b.tanggal));
@@ -988,6 +1212,8 @@
         // =============================================
         function updateStats(combinedAsc) {
             const totalMasuk = combinedAsc.filter(d => d.jenis === 'masuk').reduce((s, d) => s + d.nominal, 0);
+            const totalMasukBerjalan = combinedAsc.filter(d => d.jenis === 'masuk' && d.sumber === 'berjalan').reduce((s, d) => s + d.nominal, 0);
+            const totalMasukSebelumnya = combinedAsc.filter(d => d.jenis === 'masuk' && d.sumber === 'sebelumnya').reduce((s, d) => s + d.nominal, 0);
             const totalKeluar = combinedAsc.filter(d => d.jenis === 'keluar').reduce((s, d) => s + d.nominal, 0);
             const saldoAkhir = saldoAwal + totalMasuk - totalKeluar;
             const trxMasuk = combinedAsc.filter(d => d.jenis === 'masuk').length;
@@ -1009,6 +1235,8 @@
             document.getElementById('saldoAkhir').textContent = 'Rp ' + saldoAkhir.toLocaleString('id-ID');
             document.getElementById('saldoAkhir').classList.toggle('negative', saldoAkhir < 0);
             document.getElementById('bdMasuk').textContent = 'Rp ' + totalMasuk.toLocaleString('id-ID');
+            document.getElementById('bdMasukBerjalan').textContent = 'Rp ' + totalMasukBerjalan.toLocaleString('id-ID');
+            document.getElementById('bdMasukSebelumnya').textContent = 'Rp ' + totalMasukSebelumnya.toLocaleString('id-ID');
             document.getElementById('bdKeluar').textContent = 'Rp ' + totalKeluar.toLocaleString('id-ID');
 
             document.getElementById('statTrxMasuk').textContent = trxMasuk;
@@ -1303,6 +1531,70 @@
         // =============================================
         document.getElementById('modalPdf').addEventListener('click', function(e) {
             if (e.target === this) closePdf();
+        });
+
+        // =============================================
+        // Modal Update Saldo Awal
+        // =============================================
+        function openSaldoAwalModal() {
+            const input = document.getElementById('inputSaldoAwal');
+            input.value = saldoAwal ? saldoAwal.toLocaleString('id-ID') : '';
+            document.getElementById('modalSaldoAwal').classList.add('active');
+            setTimeout(() => input.focus(), 50);
+        }
+
+        function closeSaldoAwalModal() {
+            document.getElementById('modalSaldoAwal').classList.remove('active');
+        }
+
+        function formatSaldoAwalInput(el) {
+            const angka = el.value.replace(/\D/g, '');
+            el.value = angka ? parseInt(angka, 10).toLocaleString('id-ID') : '';
+        }
+
+        async function saveSaldoAwal() {
+            const raw = document.getElementById('inputSaldoAwal').value.replace(/\D/g, '');
+            const nominalBaru = raw ? parseInt(raw, 10) : 0;
+
+            const btn = document.querySelector('.btn-save-saldo');
+            const btnHtmlAsli = btn.innerHTML;
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Menyimpan...';
+
+            try {
+                if (saldoAwalId) {
+                    // Sudah ada data -> update berdasarkan primary key
+                    const { error } = await db
+                        .from('saldoawal')
+                        .update({ jumlah_saldo: nominalBaru })
+                        .eq('id', saldoAwalId);
+                    if (error) throw error;
+                } else {
+                    // Belum ada data -> insert baru dengan id unik (kolom id bertipe text tanpa default)
+                    const idBaru = 'saldoawal-' + Date.now();
+                    const { data, error } = await db
+                        .from('saldoawal')
+                        .insert({ id: idBaru, jumlah_saldo: nominalBaru })
+                        .select('id')
+                        .single();
+                    if (error) throw error;
+                    saldoAwalId = data ? data.id : idBaru;
+                }
+
+                saldoAwal = nominalBaru;
+                closeSaldoAwalModal();
+                showToast('Saldo awal berhasil diperbarui.');
+                loadData();
+            } catch (err) {
+                showToast('Gagal menyimpan saldo awal: ' + err.message, 'error');
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = btnHtmlAsli;
+            }
+        }
+
+        document.getElementById('modalSaldoAwal').addEventListener('click', function(e) {
+            if (e.target === this) closeSaldoAwalModal();
         });
 
         // =============================================
