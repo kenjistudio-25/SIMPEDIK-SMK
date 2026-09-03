@@ -375,6 +375,137 @@
         }
         .piket-popover .add-area-piket-btn:hover { opacity: 0.9; }
         @keyframes popoverIn { from { transform: translateY(6px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+
+        /* --- Sticky Footer Menu Bar --- */
+        .main-content {
+            padding-bottom: 90px;
+        }
+
+        .footer-menu-bar {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 64px;
+            background: white;
+            box-shadow: 0 -2px 12px rgba(0,0,0,0.1);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1002;
+        }
+
+        .footer-menu-btn {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 3px;
+            background: none;
+            border: none;
+            cursor: pointer;
+            color: var(--navbar-bg);
+            font-weight: 700;
+            font-size: 0.72rem;
+            padding: 6px 34px;
+            border-radius: 12px;
+            transition: background 0.2s ease, transform 0.2s ease;
+        }
+
+        .footer-menu-btn i {
+            font-size: 1.25rem;
+        }
+
+        .footer-menu-btn:hover {
+            background: rgba(220, 38, 38, 0.08);
+        }
+
+        .footer-menu-btn.active {
+            background: rgba(220, 38, 38, 0.12);
+            transform: translateY(-2px);
+        }
+
+        /* --- Slide Up Menu Sheet --- */
+        .menu-sheet-overlay {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(0,0,0,0.5);
+            backdrop-filter: blur(4px);
+            z-index: 1998;
+        }
+
+        .menu-sheet-overlay.active {
+            display: block;
+        }
+
+        .menu-sheet {
+            position: fixed;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: white;
+            border-radius: 20px 20px 0 0;
+            box-shadow: 0 -10px 40px rgba(0,0,0,0.25);
+            z-index: 1999;
+            max-height: 78vh;
+            display: flex;
+            flex-direction: column;
+            transform: translateY(100%);
+            transition: transform 0.3s ease;
+        }
+
+        .menu-sheet.active {
+            transform: translateY(0);
+        }
+
+        .menu-sheet-handle {
+            width: 42px;
+            height: 5px;
+            background: #ddd;
+            border-radius: 3px;
+            margin: 12px auto 2px;
+            flex-shrink: 0;
+        }
+
+        .menu-sheet-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 8px 20px 16px;
+            border-bottom: 1px solid #eee;
+            flex-shrink: 0;
+        }
+
+        .menu-sheet-header h3 {
+            font-size: 1.05rem;
+            color: #333;
+            display: flex;
+            align-items: center;
+        }
+
+        .menu-sheet-close {
+            background: #f3f4f6;
+            border: none;
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            color: #555;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.95rem;
+            transition: background 0.2s ease;
+        }
+
+        .menu-sheet-close:hover {
+            background: #e5e7eb;
+        }
+
+        .menu-sheet-body {
+            padding: 20px;
+            overflow-y: auto;
+        }
     </style>
 </head>
 <body>
@@ -436,10 +567,35 @@
             </div>
         </div>
 
-        <!-- Container Menu Grid -->
-        <div class="dashboard-card">
-            <div class="menu-grid">
+        <!-- Footer -->
+        <footer class="main-footer">
+            <p>&copy; 2026 SMKN 1 SIMPANG TERITIP.</p>
+            <p>CopyRight Kenji Studio Developer.</p>
+        </footer>
+    </main>
 
+    <!-- Sticky Footer dengan Tombol Menu -->
+    <footer class="footer-menu-bar">
+        <button type="button" class="footer-menu-btn" id="footerMenuBtn">
+            <i class="fas fa-bars"></i>
+            <span>Menu</span>
+        </button>
+    </footer>
+
+    <!-- Overlay untuk Slide Up Menu -->
+    <div class="menu-sheet-overlay" id="menuSheetOverlay"></div>
+
+    <!-- Slide Up Bar berisi Menu -->
+    <div class="menu-sheet" id="menuSheet">
+        <div class="menu-sheet-handle"></div>
+        <div class="menu-sheet-header">
+            <h3><i class="fas fa-th-large" style="color: var(--navbar-bg); margin-right: 8px;"></i>Menu</h3>
+            <button type="button" class="menu-sheet-close" id="menuSheetClose">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+        <div class="menu-sheet-body">
+            <div class="menu-grid">
 
                 <a href="#" class="menu-card" id="guruPiketLink">
                     <div class="icon-box ic-blue">
@@ -518,13 +674,7 @@
                 </a>
             </div>
         </div>
-
-        <!-- Footer -->
-        <footer class="main-footer">
-            <p>&copy; 2026 SMKN 1 SIMPANG TERITIP.</p>
-            <p>CopyRight Kenji Studio Developer.</p>
-        </footer>
-    </main>
+    </div>
 
 
     <!-- Modal Guru Piket -->
@@ -1189,6 +1339,53 @@
                 window.location.href = 'areapiketkebersihan.html';
             });
         }
+
+        // --- Sticky Footer Menu (Slide Up Bar) ---
+        const footerMenuBtn = document.getElementById('footerMenuBtn');
+        const menuSheet = document.getElementById('menuSheet');
+        const menuSheetOverlay = document.getElementById('menuSheetOverlay');
+        const menuSheetClose = document.getElementById('menuSheetClose');
+
+        function openMenuSheet() {
+            menuSheet.classList.add('active');
+            menuSheetOverlay.classList.add('active');
+            footerMenuBtn.classList.add('active');
+        }
+
+        function closeMenuSheet() {
+            menuSheet.classList.remove('active');
+            menuSheetOverlay.classList.remove('active');
+            footerMenuBtn.classList.remove('active');
+        }
+
+        if (footerMenuBtn) {
+            footerMenuBtn.addEventListener('click', () => {
+                if (menuSheet.classList.contains('active')) {
+                    closeMenuSheet();
+                } else {
+                    openMenuSheet();
+                }
+            });
+        }
+
+        if (menuSheetOverlay) {
+            menuSheetOverlay.addEventListener('click', closeMenuSheet);
+        }
+
+        if (menuSheetClose) {
+            menuSheetClose.addEventListener('click', closeMenuSheet);
+        }
+
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') closeMenuSheet();
+        });
+
+        // Tutup slide up bar otomatis saat memilih menu yang langsung berpindah halaman
+        document.querySelectorAll('.menu-sheet-body .menu-card[href]:not([href="#"])').forEach((link) => {
+            link.addEventListener('click', () => {
+                closeMenuSheet();
+            });
+        });
     </script>
 </body>
 </html>
