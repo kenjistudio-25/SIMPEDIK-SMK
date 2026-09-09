@@ -1,0 +1,609 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Formulir Data Diri Siswa</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
+    <style>
+        :root {
+            --primary-color: #667eea;
+            --secondary-color: #764ba2;
+            --bg-light: #f4f6f9;
+        }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--bg-light);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            padding: 30px 15px;
+        }
+        .card {
+            background: #fff;
+            width: 100%;
+            max-width: 600px;
+            border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.08);
+            overflow: hidden;
+        }
+        .card-header {
+            background: linear-gradient(to right, var(--primary-color), var(--secondary-color));
+            color: #fff;
+            padding: 25px 25px 20px;
+            text-align: center;
+        }
+        .card-header img { height: 45px; margin-bottom: 8px; }
+        .card-header h1 { font-size: 1.2rem; font-weight: 700; margin-bottom: 4px; }
+        .card-header p { font-size: 0.85rem; opacity: 0.9; }
+        .card-body { padding: 25px; }
+
+        .info-box {
+            background: #eef2ff;
+            border: 1px solid #c7d2fe;
+            color: #3730a3;
+            padding: 12px 15px;
+            border-radius: 8px;
+            font-size: 0.85rem;
+            margin-bottom: 20px;
+            line-height: 1.5;
+        }
+
+        .form-group { margin-bottom: 16px; }
+        .form-group label { display: block; margin-bottom: 6px; color: #555; font-size: 0.9rem; font-weight: 600; }
+        .form-group input, .form-group select, .form-group textarea {
+            width: 100%; padding: 11px 12px; border: 1px solid #ddd; border-radius: 8px;
+            font-size: 0.95rem; transition: border-color 0.3s; font-family: inherit;
+        }
+        .form-group input:focus, .form-group select:focus, .form-group textarea:focus {
+            outline: none; border-color: var(--primary-color); box-shadow: 0 0 0 3px rgba(102,126,234,0.1);
+        }
+        .form-group textarea { resize: vertical; min-height: 70px; }
+
+        .nisn-row { display: flex; gap: 8px; }
+        .nisn-row input { flex: 1; }
+        .btn {
+            padding: 11px 18px; border: none; border-radius: 8px; font-weight: 600;
+            cursor: pointer; font-size: 0.9rem; color: #fff; display: inline-flex;
+            align-items: center; gap: 6px; transition: opacity 0.2s; white-space: nowrap;
+        }
+        .btn-cari { background: #475569; }
+        .btn-cari:disabled { opacity: 0.6; cursor: not-allowed; }
+        .btn-simpan { background: linear-gradient(to right, var(--primary-color), var(--secondary-color)); width: 100%; justify-content: center; padding: 13px; font-size: 1rem; margin-top: 10px; }
+        .btn:hover:not(:disabled) { opacity: 0.9; }
+
+        .status-msg { font-size: 0.85rem; margin-top: 6px; min-height: 18px; }
+        .status-found { color: #059669; }
+        .status-new { color: #b45309; }
+        .status-error { color: #dc2626; }
+
+        fieldset { border: none; padding: 0; margin: 0; }
+        fieldset[disabled] { opacity: 0.5; }
+
+        .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
+        @media (max-width: 480px) {
+            .two-col { grid-template-columns: 1fr; }
+            .card-body { padding: 18px; }
+        }
+
+        .divider { border-top: 1px solid #eee; margin: 20px 0; }
+
+        .input-wrap { position: relative; flex: 1; display: flex; }
+        .input-wrap input { width: 100%; padding-right: 34px; }
+        .clear-btn {
+            display: none; position: absolute; right: 4px; top: 50%; transform: translateY(-50%);
+            background: none; border: none; color: #999; font-size: 0.95rem;
+            cursor: pointer; padding: 6px 8px; border-radius: 6px; line-height: 1;
+        }
+        .clear-btn.show { display: block; }
+        .clear-btn:hover { color: #dc2626; background: #fef2f2; }
+
+        .modal-overlay {
+            display: none; position: fixed; inset: 0; background: rgba(15, 23, 42, 0.55);
+            z-index: 100; align-items: center; justify-content: center; padding: 20px;
+        }
+        .modal-overlay.show { display: flex; }
+        .modal-box {
+            background: #fff; border-radius: 14px; max-width: 380px; width: 100%;
+            padding: 28px 24px 24px; text-align: center;
+            box-shadow: 0 20px 50px rgba(0,0,0,0.25);
+            animation: modalPop 0.25s ease;
+        }
+        @keyframes modalPop {
+            from { opacity: 0; transform: scale(0.9) translateY(8px); }
+            to { opacity: 1; transform: scale(1) translateY(0); }
+        }
+        .modal-icon {
+            width: 60px; height: 60px; border-radius: 50%; margin: 0 auto 16px;
+            background: linear-gradient(135deg, #fb923c, #ef4444);
+            display: flex; align-items: center; justify-content: center;
+            color: #fff; font-size: 1.6rem;
+        }
+        .modal-title { font-size: 1.1rem; color: #1e293b; margin-bottom: 8px; }
+        .modal-text { font-size: 0.9rem; color: #64748b; line-height: 1.5; margin-bottom: 20px; }
+        .modal-btn {
+            background: linear-gradient(to right, var(--primary-color), var(--secondary-color));
+            color: #fff; border: none; padding: 11px 24px; border-radius: 8px;
+            font-weight: 600; font-size: 0.9rem; cursor: pointer; transition: opacity 0.2s;
+        }
+        .modal-btn:hover { opacity: 0.9; }
+
+        .dropdown-list {
+            position: absolute; top: 100%; left: 0; right: 0; z-index: 20;
+            background: #fff; border: 1px solid #ddd; border-radius: 8px;
+            margin-top: 4px; max-height: 220px; overflow-y: auto;
+            box-shadow: 0 6px 16px rgba(0,0,0,0.1); display: none;
+        }
+        .dropdown-list.show { display: block; }
+        .hasil-nama-item {
+            padding: 10px 12px; cursor: pointer; font-size: 0.88rem; color: #333;
+            display: flex; justify-content: space-between; align-items: center;
+            transition: background 0.15s; border-bottom: 1px solid #f0f0f0;
+        }
+        .hasil-nama-item:last-child { border-bottom: none; }
+        .hasil-nama-item:hover, .hasil-nama-item.active { background: #eef2ff; }
+        .hasil-nama-item .nisn-tag { color: #888; font-size: 0.8rem; }
+        .hasil-nama-item.no-result { cursor: default; color: #999; justify-content: center; }
+        .hasil-nama-item.no-result:hover { background: #fff; }
+    </style>
+</head>
+<body>
+
+    <div class="card">
+        <div class="card-header">
+            <img id="schoolLogo" src="" alt="Logo Sekolah" style="display:none;">
+            <h1 id="schoolName">Formulir Data Diri Siswa</h1>
+            <p>Isi atau perbarui data diri Anda dengan benar</p>
+        </div>
+        <div class="card-body">
+            <div class="info-box">
+                <i class="fas fa-circle-info"></i>
+                Cari data Anda dengan mengetik <strong>NISN</strong> lalu klik tombol Cari, atau ketik <strong>Nama Siswa</strong> dan pilih dari saran yang muncul.
+                Jika data Anda sudah ada, formulir akan otomatis terisi untuk Anda periksa/perbarui.
+                Jika belum ada, silakan lengkapi data baru.
+            </div>
+
+            <form id="siswaPortalForm" autocomplete="off">
+                <div class="form-group">
+                    <label for="nisn">NISN</label>
+                    <div class="nisn-row">
+                        <div class="input-wrap">
+                            <input type="text" id="nisn" name="nisn" placeholder="Nomor Induk Siswa Nasional" inputmode="numeric">
+                            <button type="button" class="clear-btn" id="clearNisnBtn" title="Hapus"><i class="fas fa-xmark"></i></button>
+                        </div>
+                        <button type="button" class="btn btn-cari" id="cariDataBtn"><i class="fas fa-magnifying-glass"></i> Cari Data</button>
+                    </div>
+                </div>
+
+                <div style="text-align:center;color:#999;font-size:0.8rem;margin:14px 0;">— atau cari dengan nama —</div>
+
+                <div class="form-group" style="position:relative;">
+                    <label for="namaCari">Nama Siswa</label>
+                    <div class="input-wrap">
+                        <input type="text" id="namaCari" name="namaCari" placeholder="Ketik Nama Siswa" autocomplete="off">
+                        <button type="button" class="clear-btn" id="clearNamaBtn" title="Hapus"><i class="fas fa-xmark"></i></button>
+                    </div>
+                    <div id="hasilNamaList" class="dropdown-list"></div>
+                </div>
+
+                <div class="status-msg" id="statusMsg"></div>
+
+                <div class="divider"></div>
+
+                <fieldset id="dataFields" disabled>
+                    <div class="form-group">
+                        <label for="namaSiswa">Nama Siswa</label>
+                        <input type="text" id="namaSiswa" name="namaSiswa" placeholder="Nama Lengkap Siswa" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="jenisKelamin">Jenis Kelamin</label>
+                        <select id="jenisKelamin" name="jenisKelamin" required>
+                            <option value="" disabled selected>Pilih Jenis Kelamin</option>
+                            <option value="Laki-laki">Laki-laki</option>
+                            <option value="Perempuan">Perempuan</option>
+                        </select>
+                    </div>
+                    <div class="form-group two-col">
+                        <div>
+                            <label for="tempatLahir">Tempat Lahir</label>
+                            <input type="text" id="tempatLahir" name="tempatLahir" placeholder="Kota Kelahiran">
+                        </div>
+                        <div>
+                            <label for="tanggalLahir">Tanggal Lahir</label>
+                            <input type="date" id="tanggalLahir" name="tanggalLahir">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="namaAyah">Nama Ayah</label>
+                        <input type="text" id="namaAyah" name="namaAyah" placeholder="Nama Ayah Kandung">
+                    </div>
+                    <div class="form-group">
+                        <label for="namaIbu">Nama Ibu</label>
+                        <input type="text" id="namaIbu" name="namaIbu" placeholder="Nama Ibu Kandung">
+                    </div>
+                    <div class="form-group">
+                        <label for="alamat">Alamat</label>
+                        <textarea id="alamat" name="alamat" placeholder="Alamat Lengkap" required></textarea>
+                    </div>
+
+                    <button type="submit" class="btn btn-simpan" id="simpanBtn"><i class="fas fa-save"></i> Simpan Data</button>
+                </fieldset>
+            </form>
+        </div>
+    </div>
+
+    <div class="modal-overlay" id="dupModalOverlay">
+        <div class="modal-box">
+            <div class="modal-icon"><i class="fas fa-clone"></i></div>
+            <h3 class="modal-title">NISN Sudah Terdaftar</h3>
+            <p class="modal-text">Data NISN sudah ada di database, silahkan cari berdasarkan nama anda dan update data anda.</p>
+            <button type="button" class="modal-btn" id="dupModalCloseBtn">Mengerti</button>
+        </div>
+    </div>
+
+    <script>
+        const supabaseUrl = 'https://ixccpgfllwerlifpcpdp.supabase.co';
+        const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Iml4Y2NwZ2ZsbHdlcmxpZnBjcGRwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODI4NTE3MTEsImV4cCI6MjA5ODQyNzcxMX0.CwrrPcl0RkDK4zRWhfp7oTqwNlxOIZIb3IGUUzKTE9Q';
+        const supabaseClient = supabase.createClient(supabaseUrl, supabaseKey);
+
+        // Ambil identitas sekolah untuk tampilan header (opsional, tidak wajib berhasil)
+        async function loadSchoolIdentity() {
+            try {
+                const { data } = await supabaseClient
+                    .from('identitassekolah')
+                    .select('nama_sekolah, logo')
+                    .limit(1)
+                    .single();
+                if (data) {
+                    if (data.nama_sekolah) document.getElementById('schoolName').textContent = data.nama_sekolah;
+                    if (data.logo) {
+                        const img = document.getElementById('schoolLogo');
+                        img.src = data.logo;
+                        img.style.display = 'inline-block';
+                    }
+                }
+            } catch (err) {
+                console.warn('Identitas sekolah tidak dimuat:', err);
+            }
+        }
+        document.addEventListener('DOMContentLoaded', loadSchoolIdentity);
+
+        const nisnInput = document.getElementById('nisn');
+        const clearNisnBtn = document.getElementById('clearNisnBtn');
+        const cariDataBtn = document.getElementById('cariDataBtn');
+        const namaCariInput = document.getElementById('namaCari');
+        const clearNamaBtn = document.getElementById('clearNamaBtn');
+        const hasilNamaList = document.getElementById('hasilNamaList');
+        const statusMsg = document.getElementById('statusMsg');
+        const dataFields = document.getElementById('dataFields');
+        const form = document.getElementById('siswaPortalForm');
+
+        let dataDitemukan = false; // menandai apakah sedang mode edit data yang sudah ada
+
+        function isiForm(siswa) {
+            document.getElementById('namaSiswa').value = siswa.nama_siswa || '';
+            document.getElementById('jenisKelamin').value = siswa.jenis_kelamin || '';
+            document.getElementById('tempatLahir').value = siswa.tempat_lahir || '';
+            document.getElementById('tanggalLahir').value = siswa.tanggal_lahir || '';
+            document.getElementById('namaAyah').value = siswa.nama_ayah || '';
+            document.getElementById('namaIbu').value = siswa.nama_ibu || '';
+            document.getElementById('alamat').value = siswa.alamat || '';
+        }
+
+        function kosongkanForm() {
+            document.getElementById('namaSiswa').value = '';
+            document.getElementById('jenisKelamin').value = '';
+            document.getElementById('tempatLahir').value = '';
+            document.getElementById('tanggalLahir').value = '';
+            document.getElementById('namaAyah').value = '';
+            document.getElementById('namaIbu').value = '';
+            document.getElementById('alamat').value = '';
+        }
+
+        // Tampilkan tombol "x" jika field berisi teks, atau sedang terkunci
+        // (agar user tetap bisa membukanya lagi untuk mencari ulang).
+        function updateClearButtons() {
+            clearNisnBtn.classList.toggle('show', nisnInput.value.length > 0 || nisnInput.readOnly);
+            clearNamaBtn.classList.toggle('show', namaCariInput.value.length > 0 || namaCariInput.disabled);
+        }
+
+        // Reset total: buka kunci kedua kolom pencarian dan kosongkan formulir,
+        // dipakai saat user ingin mengganti NISN/Nama yang salah ketik.
+        function resetPencarian() {
+            nisnInput.value = '';
+            nisnInput.readOnly = false;
+            namaCariInput.value = '';
+            namaCariInput.disabled = false;
+            hasilNamaList.innerHTML = '';
+            hasilNamaList.classList.remove('show');
+            dataFields.disabled = true;
+            kosongkanForm();
+            dataDitemukan = false;
+            statusMsg.className = 'status-msg';
+            statusMsg.textContent = '';
+            updateClearButtons();
+        }
+
+        nisnInput.addEventListener('input', updateClearButtons);
+        namaCariInput.addEventListener('input', updateClearButtons);
+
+        clearNisnBtn.addEventListener('click', () => {
+            if (nisnInput.readOnly) {
+                resetPencarian();
+            } else {
+                nisnInput.value = '';
+                updateClearButtons();
+                nisnInput.focus();
+            }
+        });
+
+        clearNamaBtn.addEventListener('click', () => {
+            if (namaCariInput.disabled) {
+                resetPencarian();
+            } else {
+                namaCariInput.value = '';
+                hasilNamaList.innerHTML = '';
+                hasilNamaList.classList.remove('show');
+                updateClearButtons();
+                namaCariInput.focus();
+            }
+        });
+
+        // Fungsi inti: cari data siswa berdasarkan NISN dan isi formulir.
+        // Dipakai baik oleh tombol "Cari Data" maupun saat memilih hasil pencarian nama.
+        async function loadDataByNisn(nisnVal) {
+            statusMsg.className = 'status-msg';
+            statusMsg.textContent = '';
+            hasilNamaList.innerHTML = '';
+
+            try {
+                const { data, error } = await supabaseClient
+                    .from('datasiswa')
+                    .select('*')
+                    .eq('nisn', nisnVal)
+                    .maybeSingle();
+
+                if (error) throw error;
+
+                nisnInput.value = nisnVal;
+
+                if (data) {
+                    isiForm(data);
+                    dataDitemukan = true;
+                    statusMsg.className = 'status-msg status-found';
+                    statusMsg.innerHTML = '<i class="fas fa-circle-check"></i> Data ditemukan. Silakan periksa dan perbarui jika ada yang perlu diubah.';
+                } else {
+                    kosongkanForm();
+                    dataDitemukan = false;
+                    statusMsg.className = 'status-msg status-new';
+                    statusMsg.innerHTML = '<i class="fas fa-triangle-exclamation"></i> NISN belum terdaftar. Silakan lengkapi data baru Anda di bawah ini.';
+                }
+
+                dataFields.disabled = false;
+                nisnInput.readOnly = true; // Kunci NISN setelah dicari, agar tidak salah simpan ke NISN lain
+                namaCariInput.disabled = true; // Kunci pencarian nama juga, supaya tidak membingungkan
+                updateClearButtons();
+
+            } catch (err) {
+                console.error('Gagal mencari data:', err);
+                statusMsg.className = 'status-msg status-error';
+                statusMsg.textContent = 'Gagal mencari data: ' + err.message;
+            }
+        }
+
+        cariDataBtn.addEventListener('click', async () => {
+            const nisnVal = nisnInput.value.trim();
+            if (!nisnVal) {
+                statusMsg.className = 'status-msg status-error';
+                statusMsg.textContent = 'Masukkan NISN terlebih dahulu.';
+                return;
+            }
+
+            cariDataBtn.disabled = true;
+            cariDataBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Mencari...';
+
+            await loadDataByNisn(nisnVal);
+
+            cariDataBtn.disabled = false;
+            cariDataBtn.innerHTML = '<i class="fas fa-magnifying-glass"></i> Cari Data';
+        });
+
+        // Pencarian nama secara live (autocomplete) sambil user mengetik, dengan debounce
+        // agar tidak mengirim query ke server di setiap ketukan tombol.
+        let debounceTimer = null;
+
+        namaCariInput.addEventListener('input', () => {
+            const namaVal = namaCariInput.value.trim();
+            clearTimeout(debounceTimer);
+
+            if (namaVal.length < 2) {
+                hasilNamaList.classList.remove('show');
+                hasilNamaList.innerHTML = '';
+                return;
+            }
+
+            debounceTimer = setTimeout(() => cariNamaLive(namaVal), 300);
+        });
+
+        // Tutup dropdown saat klik di luar area input/hasil
+        document.addEventListener('click', (e) => {
+            if (!e.target.closest('#namaCari') && !e.target.closest('#hasilNamaList')) {
+                hasilNamaList.classList.remove('show');
+            }
+        });
+
+        async function cariNamaLive(namaVal) {
+            try {
+                const { data, error } = await supabaseClient
+                    .from('datasiswa')
+                    .select('nisn, nama_siswa')
+                    .ilike('nama_siswa', `%${namaVal}%`)
+                    .limit(8);
+
+                if (error) throw error;
+
+                hasilNamaList.innerHTML = '';
+
+                if (!data || data.length === 0) {
+                    const item = document.createElement('div');
+                    item.className = 'hasil-nama-item no-result';
+                    item.textContent = 'Nama tidak ditemukan';
+                    hasilNamaList.appendChild(item);
+                } else {
+                    data.forEach((siswa) => {
+                        const item = document.createElement('div');
+                        item.className = 'hasil-nama-item';
+                        item.innerHTML = `<span>${siswa.nama_siswa}</span><span class="nisn-tag">${siswa.nisn}</span>`;
+                        item.addEventListener('click', async () => {
+                            namaCariInput.value = siswa.nama_siswa;
+                            hasilNamaList.classList.remove('show');
+                            hasilNamaList.innerHTML = '';
+                            await loadDataByNisn(siswa.nisn);
+                        });
+                        hasilNamaList.appendChild(item);
+                    });
+                }
+
+                hasilNamaList.classList.add('show');
+
+            } catch (err) {
+                console.error('Gagal mencari data:', err);
+                hasilNamaList.innerHTML = '';
+                hasilNamaList.classList.remove('show');
+                statusMsg.className = 'status-msg status-error';
+                statusMsg.textContent = 'Gagal mencari data: ' + err.message;
+            }
+        }
+
+        const dupModalOverlay = document.getElementById('dupModalOverlay');
+        const dupModalCloseBtn = document.getElementById('dupModalCloseBtn');
+
+        function tampilkanModalDuplikat() {
+            dupModalOverlay.classList.add('show');
+        }
+        function tutupModalDuplikat() {
+            dupModalOverlay.classList.remove('show');
+        }
+        dupModalCloseBtn.addEventListener('click', tutupModalDuplikat);
+        dupModalOverlay.addEventListener('click', (e) => {
+            if (e.target === dupModalOverlay) tutupModalDuplikat();
+        });
+
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+
+            if (!nisnInput.value.trim()) {
+                statusMsg.className = 'status-msg status-error';
+                statusMsg.textContent = 'NISN belum diisi. Silakan cari data dengan NISN atau Nama terlebih dahulu.';
+                return;
+            }
+
+            // Konfirmasi wajib sebelum menyimpan
+            const yakin = confirm('Periksa kembali data anda, Apakah data anda sudah benar..?');
+            if (!yakin) return;
+
+            const simpanBtn = document.getElementById('simpanBtn');
+            const originalText = simpanBtn.innerHTML;
+            simpanBtn.disabled = true;
+            simpanBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Menyimpan...';
+
+            try {
+                const nisnVal = nisnInput.value.trim();
+
+                // Cek ulang ke database sesaat sebelum menyimpan, untuk mencegah NISN ganda
+                // (mis. sudah didaftarkan orang lain setelah pencarian dilakukan).
+                const { data: existing, error: cekError } = await supabaseClient
+                    .from('datasiswa')
+                    .select('nisn')
+                    .eq('nisn', nisnVal)
+                    .maybeSingle();
+
+                if (cekError) throw cekError;
+
+                if (!dataDitemukan) {
+                    // Mode data baru: NISN wajib belum ada di database.
+                    if (existing) {
+                        tampilkanModalDuplikat();
+                        return;
+                    }
+
+                    const siswaBaru = {
+                        nisn: nisnVal,
+                        nama_siswa: document.getElementById('namaSiswa').value.trim(),
+                        jenis_kelamin: document.getElementById('jenisKelamin').value,
+                        tempat_lahir: document.getElementById('tempatLahir').value.trim() || null,
+                        tanggal_lahir: document.getElementById('tanggalLahir').value || null,
+                        nama_ayah: document.getElementById('namaAyah').value.trim() || null,
+                        nama_ibu: document.getElementById('namaIbu').value.trim() || null,
+                        alamat: document.getElementById('alamat').value.trim()
+                    };
+
+                    const { error } = await supabaseClient
+                        .from('datasiswa')
+                        .insert(siswaBaru);
+
+                    if (error) throw error;
+
+                } else {
+                    // Mode update data yang sudah ditemukan lewat pencarian.
+                    // NISN sengaja TIDAK disertakan dalam payload update, jadi tidak akan pernah berubah.
+                    if (!existing) {
+                        // Data ternyata sudah terhapus/berubah sejak pencarian dilakukan.
+                        statusMsg.className = 'status-msg status-error';
+                        statusMsg.textContent = 'Data tidak ditemukan lagi. Silakan cari ulang data Anda.';
+                        return;
+                    }
+
+                    const siswaUpdate = {
+                        nama_siswa: document.getElementById('namaSiswa').value.trim(),
+                        jenis_kelamin: document.getElementById('jenisKelamin').value,
+                        tempat_lahir: document.getElementById('tempatLahir').value.trim() || null,
+                        tanggal_lahir: document.getElementById('tanggalLahir').value || null,
+                        nama_ayah: document.getElementById('namaAyah').value.trim() || null,
+                        nama_ibu: document.getElementById('namaIbu').value.trim() || null,
+                        alamat: document.getElementById('alamat').value.trim()
+                    };
+
+                    const { error } = await supabaseClient
+                        .from('datasiswa')
+                        .update(siswaUpdate)
+                        .eq('nisn', nisnVal);
+
+                    if (error) throw error;
+                }
+
+                alert('Data berhasil disimpan. Terima kasih! Tab ini akan ditutup otomatis.');
+
+                // Coba tutup tab otomatis. Browser hanya mengizinkan ini jika tab
+                // dibuka lewat script (mis. window.open dari tombol "Kirim Link").
+                // Jika gagal (tab dibuka langsung dari link WhatsApp/Chrome dsb),
+                // beri tahu siswa untuk menutup tab secara manual.
+                setTimeout(() => {
+                    window.close();
+                    // Jika baris di atas tidak berhasil menutup tab (browser menolak),
+                    // kode di bawah ini akan tetap berjalan karena window.close() tidak melempar error.
+                    setTimeout(() => {
+                        document.body.innerHTML = `
+                            <div style="max-width:500px;margin:60px auto;text-align:center;font-family:'Segoe UI',sans-serif;color:#333;padding:20px;">
+                                <i class="fas fa-circle-check" style="font-size:3rem;color:#10b981;"></i>
+                                <h2 style="margin-top:15px;">Data berhasil disimpan</h2>
+                                <p style="color:#666;margin-top:8px;">Anda bisa menutup tab ini sekarang.</p>
+                            </div>
+                        `;
+                    }, 400);
+                }, 600);
+
+            } catch (err) {
+                console.error('Gagal menyimpan data:', err);
+                alert('Gagal menyimpan data: ' + err.message);
+            } finally {
+                simpanBtn.disabled = false;
+                simpanBtn.innerHTML = originalText;
+            }
+        });
+    </script>
+</body>
+</html>
