@@ -258,6 +258,7 @@
                     </div>
                 </div>
                 <div class="toolbar-right">
+                    <button class="btn" id="kirimLinkBtn" style="background: linear-gradient(to right, #06b6d4, #0891b2);"><i class="fas fa-link"></i> Kirim Link</button>
                     <button class="btn btn-success" id="importBtn"><i class="fas fa-file-import"></i> Import CSV/Excel</button>
                     <button class="btn btn-secondary" id="downloadTemplateBtn"><i class="fas fa-file-excel"></i> Download Template</button>
                     <button class="btn btn-danger" id="exportPdfBtn"><i class="fas fa-file-pdf"></i> Export Pdf</button>
@@ -272,6 +273,7 @@
                             <th>No</th>
                             <th>NISN</th>
                             <th>Nama Siswa</th>
+                            <th>Jenis Kelamin</th>
                             <th>Tempat Lahir</th>
                             <th>Tanggal Lahir</th>
                             <th>Nama Ayah</th>
@@ -282,7 +284,7 @@
                     </thead>
                     <tbody>
                         <tr>
-                            <td colspan="9" style="text-align: center; color: #888; padding: 20px;">Belum ada data siswa.</td>
+                            <td colspan="10" style="text-align: center; color: #888; padding: 20px;">Belum ada data siswa.</td>
                         </tr>
                     </tbody>
                 </table>
@@ -309,11 +311,19 @@
                 <input type="hidden" id="isEditMode" value="false">
                 <div class="form-group">
                     <label for="nisn">NISN</label>
-                    <input type="number" id="nisn" name="nisn" placeholder="Nomor Induk Siswa Nasional" required>
+                    <input type="text" id="nisn" name="nisn" placeholder="Nomor Induk Siswa Nasional" inputmode="numeric" required>
                 </div>
                 <div class="form-group">
                     <label for="namaSiswa">Nama Siswa</label>
                     <input type="text" id="namaSiswa" name="namaSiswa" placeholder="Nama Lengkap Siswa" required>
+                </div>
+                <div class="form-group">
+                    <label for="jenisKelamin">Jenis Kelamin</label>
+                    <select id="jenisKelamin" name="jenisKelamin" required style="width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 6px; font-size: 0.95rem;">
+                        <option value="" disabled selected>Pilih Jenis Kelamin</option>
+                        <option value="Laki-laki">Laki-laki</option>
+                        <option value="Perempuan">Perempuan</option>
+                    </select>
                 </div>
                 <div class="form-group" style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
                     <div>
@@ -416,7 +426,7 @@
         // --- Load Data Siswa ---
         async function loadSiswaData() {
             const tableBody = document.querySelector('.custom-table tbody');
-            tableBody.innerHTML = '<tr><td colspan="9" style="text-align:center;">Memuat data...</td></tr>';
+            tableBody.innerHTML = '<tr><td colspan="10" style="text-align:center;">Memuat data...</td></tr>';
 
             try {
                 const { data, error } = await supabaseClient
@@ -431,7 +441,7 @@
 
             } catch (err) {
                 console.error('Error loading siswa data:', err);
-                tableBody.innerHTML = `<tr><td colspan="9" style="text-align:center; color: #ef4444;">Gagal memuat data: ${err.message}</td></tr>`;
+                tableBody.innerHTML = `<tr><td colspan="10" style="text-align:center; color: #ef4444;">Gagal memuat data: ${err.message}</td></tr>`;
             }
         }
 
@@ -441,7 +451,7 @@
             tableBody.innerHTML = '';
 
             if (!data || data.length === 0) {
-                tableBody.innerHTML = '<tr><td colspan="9" style="text-align: center; color: #888; padding: 20px;">Data tidak ditemukan.</td></tr>';
+                tableBody.innerHTML = '<tr><td colspan="10" style="text-align: center; color: #888; padding: 20px;">Data tidak ditemukan.</td></tr>';
                 return;
             }
 
@@ -451,11 +461,12 @@
                     <td>${index + 1}</td>
                     <td>${siswa.nisn}</td>
                     <td>${siswa.nama_siswa}</td>
+                    <td>${siswa.jenis_kelamin || ''}</td>
                     <td>${siswa.tempat_lahir || '-'}</td>
                     <td>${siswa.tanggal_lahir || '-'}</td>
                     <td>${siswa.nama_ayah || '-'}</td>
                     <td>${siswa.nama_ibu || '-'}</td>
-                    <td>${siswa.alamat}</td>
+                    <td>${siswa.alamat || ''}</td>
                     <td>
                         <button onclick="editSiswa('${siswa.nisn}')" style="background:none; border:none; color:#60a5fa; cursor:pointer;" title="Edit"><i class="fas fa-edit"></i></button>
                         <button onclick="deleteSiswa('${siswa.nisn}')" style="background:none; border:none; color:#f87171; cursor:pointer; margin-left:10px;" title="Hapus"><i class="fas fa-trash"></i></button>
@@ -483,6 +494,7 @@
                 nisnInput.value = siswa.nisn;
                 nisnInput.readOnly = true; // NISN tidak boleh diubah saat edit (Primary Key)
                 document.getElementById('namaSiswa').value = siswa.nama_siswa;
+                document.getElementById('jenisKelamin').value = siswa.jenis_kelamin || '';
                 document.getElementById('tempatLahir').value = siswa.tempat_lahir || '';
                 document.getElementById('tanggalLahir').value = siswa.tanggal_lahir || '';
                 document.getElementById('namaAyah').value = siswa.nama_ayah || '';
@@ -531,6 +543,7 @@
                 const isEdit = isEditModeInput.value === "true";
                 const nisnVal = document.getElementById('nisn').value;
                 const namaVal = document.getElementById('namaSiswa').value;
+                const jenisKelaminVal = document.getElementById('jenisKelamin').value;
                 const tempatLahirVal = document.getElementById('tempatLahir').value;
                 const tanggalLahirVal = document.getElementById('tanggalLahir').value || null;
                 const namaAyahVal = document.getElementById('namaAyah').value;
@@ -540,6 +553,7 @@
                 const siswaData = {
                     nisn: nisnVal,
                     nama_siswa: namaVal,
+                    jenis_kelamin: jenisKelaminVal,
                     tempat_lahir: tempatLahirVal,
                     tanggal_lahir: tanggalLahirVal,
                     nama_ayah: namaAyahVal,
@@ -629,11 +643,12 @@
                         cells[0].innerText, // No
                         cells[1].innerText, // NISN
                         cells[2].innerText, // Nama Siswa
-                        cells[3].innerText, // Tempat Lahir
-                        cells[4].innerText, // Tanggal Lahir
-                        cells[5].innerText, // Nama Ayah
-                        cells[6].innerText, // Nama Ibu
-                        cells[7].innerText  // Alamat
+                        cells[3].innerText, // Jenis Kelamin
+                        cells[4].innerText, // Tempat Lahir
+                        cells[5].innerText, // Tanggal Lahir
+                        cells[6].innerText, // Nama Ayah
+                        cells[7].innerText, // Nama Ibu
+                        cells[8].innerText  // Alamat
                     ];
                     tableRows.push(rowData);
                 }
@@ -641,7 +656,7 @@
 
             // Generate Tabel PDF
             doc.autoTable({
-                head: [['No', 'NISN', 'Nama Siswa', 'Tempat Lahir', 'Tgl Lahir', 'Ayah', 'Ibu', 'Alamat']],
+                head: [['No', 'NISN', 'Nama Siswa', 'JK', 'Tempat Lahir', 'Tgl Lahir', 'Ayah', 'Ibu', 'Alamat']],
                 body: tableRows,
                 startY: yPos,
                 theme: 'grid',
@@ -658,9 +673,9 @@
 
         downloadTemplateBtn.addEventListener('click', () => {
             // Header HARUS sama persis dengan nama kolom di tabel 'datasiswa'
-            const headers = ['nisn', 'nama_siswa', 'tempat_lahir', 'tanggal_lahir', 'nama_ayah', 'nama_ibu', 'alamat'];
+            const headers = ['nisn', 'nama_siswa', 'jenis_kelamin', 'tempat_lahir', 'tanggal_lahir', 'nama_ayah', 'nama_ibu', 'alamat'];
             const contohData = [
-                ['0012345678', 'Contoh Nama Siswa', 'Muntok', '2008-05-17', 'Contoh Nama Ayah', 'Contoh Nama Ibu', 'Contoh Alamat Lengkap']
+                ['0012345678', 'Contoh Nama Siswa', 'Laki-laki', 'Muntok', '2008-05-17', 'Contoh Nama Ayah', 'Contoh Nama Ibu', 'Contoh Alamat Lengkap']
             ];
 
             const worksheetData = [headers, ...contohData];
@@ -668,9 +683,21 @@
 
             // Atur lebar kolom agar lebih mudah dibaca
             worksheet['!cols'] = [
-                { wch: 15 }, { wch: 25 }, { wch: 18 }, { wch: 15 },
+                { wch: 15 }, { wch: 25 }, { wch: 14 }, { wch: 18 }, { wch: 15 },
                 { wch: 25 }, { wch: 25 }, { wch: 30 }
             ];
+
+            // Paksa kolom NISN (kolom A) dibaca sebagai Teks, bukan Angka,
+            // supaya angka 0 di depan (mis. 0012345678) tidak hilang saat diisi user.
+            const rangeNisn = XLSX.utils.decode_range(worksheet['!ref']);
+            for (let r = 1; r <= rangeNisn.e.r; r++) { // mulai dari baris 2 (lewati header)
+                const cellAddr = XLSX.utils.encode_cell({ r, c: 0 }); // kolom A = nisn
+                const cell = worksheet[cellAddr];
+                if (cell) {
+                    cell.t = 's'; // tipe: string/teks
+                    cell.z = '@'; // format angka: Teks
+                }
+            }
 
             const workbook = XLSX.utils.book_new();
             XLSX.utils.book_append_sheet(workbook, worksheet, 'Template Data Siswa');
@@ -683,10 +710,22 @@
         const importFile = document.getElementById('importFile');
 
         // Kolom yang valid sesuai tabel 'datasiswa' di database
-        const KOLOM_VALID = ['nisn', 'nama_siswa', 'tempat_lahir', 'tanggal_lahir', 'nama_ayah', 'nama_ibu', 'alamat'];
+        const KOLOM_VALID = ['nisn', 'nama_siswa', 'jenis_kelamin', 'tempat_lahir', 'tanggal_lahir', 'nama_ayah', 'nama_ibu', 'alamat'];
 
         importBtn.addEventListener('click', () => {
             importFile.click();
+        });
+
+        // --- Tombol Kirim Link (buka Portal Siswa di tab baru) ---
+        const kirimLinkBtn = document.getElementById('kirimLinkBtn');
+        kirimLinkBtn.addEventListener('click', () => {
+            // Buka halaman portal-siswa.html di tab baru (harus berada di folder yang sama)
+            const w = window.open('portal-siswa.html', '_blank');
+            if (!w) {
+                alert('Popup diblokir oleh browser. Izinkan popup untuk situs ini, lalu coba lagi.\n\nAtau salin URL berikut dan kirim langsung ke siswa:\n' + new URL('portal-siswa.html', window.location.href).href);
+            } else {
+                alert('Tab baru terbuka berisi formulir untuk siswa.\n\nSalin URL dari address bar tab tersebut dan kirimkan ke siswa (misal via WhatsApp), agar siswa bisa mengisi/memperbarui datanya sendiri.\n\nURL: ' + new URL('portal-siswa.html', window.location.href).href);
+            }
         });
 
         // Ubah nilai tanggal (Date object / serial Excel / string) menjadi format YYYY-MM-DD
@@ -717,9 +756,10 @@
         // Bersihkan & normalisasi baris data mentah (dari CSV atau Excel) sebelum dikirim ke Supabase
         function bersihkanData(rawRows) {
             const kolomAsingDitemukan = new Set();
+            const barisTanpaNisn = []; // nomor baris (sesuai file, header = baris 1) yang NISN-nya kosong
 
             const rows = rawRows
-                .map(rawRow => {
+                .map((rawRow, idx) => {
                     const row = {};
                     Object.keys(rawRow).forEach(key => {
                         const cleanKey = key.trim().toLowerCase().replace(/\s+/g, '_');
@@ -739,12 +779,25 @@
 
                         row[cleanKey] = val;
                     });
+                    row.__baris = idx + 2; // +2: idx mulai 0 & baris 1 adalah header
                     return row;
                 })
                 // buang baris yang seluruh kolomnya kosong
-                .filter(row => Object.values(row).some(v => v !== null && v !== undefined && v !== ''));
+                .filter(row => Object.keys(row).some(k => k !== '__baris' && row[k] !== null && row[k] !== undefined && row[k] !== ''))
+                // buang baris yang NISN-nya kosong, tapi catat dulu nomor barisnya
+                .filter(row => {
+                    if (!row.nisn) {
+                        barisTanpaNisn.push(row.__baris);
+                        return false;
+                    }
+                    return true;
+                })
+                .map(row => {
+                    delete row.__baris;
+                    return row;
+                });
 
-            return { rows, kolomAsingDitemukan };
+            return { rows, kolomAsingDitemukan, barisTanpaNisn };
         }
 
         // Fungsi untuk memproses data hasil parsing (dari CSV maupun Excel)
@@ -755,16 +808,23 @@
                 return;
             }
 
-            const { rows, kolomAsingDitemukan } = bersihkanData(rawRows);
+            const { rows, kolomAsingDitemukan, barisTanpaNisn } = bersihkanData(rawRows);
 
             if (rows.length === 0) {
-                alert('Tidak ada data valid yang bisa diimport. Pastikan header kolom sesuai: nisn, nama_siswa, tempat_lahir, tanggal_lahir, nama_ayah, nama_ibu, alamat');
+                let pesanKosong = 'Tidak ada data valid yang bisa diimport. Pastikan header kolom sesuai: nisn, nama_siswa, jenis_kelamin, tempat_lahir, tanggal_lahir, nama_ayah, nama_ibu, alamat';
+                if (barisTanpaNisn.length > 0) {
+                    pesanKosong += `\n\nSemua baris data tidak punya NISN (baris file: ${barisTanpaNisn.join(', ')}). NISN wajib diisi untuk tiap siswa.`;
+                }
+                alert(pesanKosong);
                 importFile.value = '';
                 return;
             }
 
             if (kolomAsingDitemukan.size > 0) {
                 console.warn('Kolom diabaikan karena tidak dikenali:', Array.from(kolomAsingDitemukan).join(', '));
+            }
+            if (barisTanpaNisn.length > 0) {
+                console.warn('Baris dilewati karena NISN kosong (nomor baris di file):', barisTanpaNisn.join(', '));
             }
 
             try {
@@ -779,12 +839,15 @@
                 if (kolomAsingDitemukan.size > 0) {
                     pesan += `\n\nKolom berikut diabaikan karena tidak dikenali: ${Array.from(kolomAsingDitemukan).join(', ')}`;
                 }
+                if (barisTanpaNisn.length > 0) {
+                    pesan += `\n\nBaris berikut DILEWATI karena NISN kosong (nomor baris di file, header = baris 1): ${barisTanpaNisn.join(', ')}. Lengkapi NISN lalu import ulang baris tersebut.`;
+                }
                 alert(pesan);
                 loadSiswaData(); // Refresh tabel
             } catch (err) {
                 console.error('Import error:', err);
                 const detailPesan = [err.message, err.details, err.hint].filter(Boolean).join(' | ');
-                alert('Gagal import data: ' + detailPesan + '\n\nPastikan header sesuai: nisn, nama_siswa, tempat_lahir, tanggal_lahir, nama_ayah, nama_ibu, alamat\n\nFormat tanggal_lahir yang didukung: YYYY-MM-DD');
+                alert('Gagal import data: ' + detailPesan + '\n\nPastikan header sesuai: nisn, nama_siswa, jenis_kelamin, tempat_lahir, tanggal_lahir, nama_ayah, nama_ibu, alamat\n\nFormat tanggal_lahir yang didukung: YYYY-MM-DD');
             } finally {
                 // Reset input file agar bisa pilih file yang sama lagi jika perlu
                 importFile.value = '';
@@ -809,7 +872,10 @@
                         const worksheet = workbook.Sheets[firstSheetName];
 
                         // Konversi sheet ke array of object, baris pertama dianggap header
-                        const rows = XLSX.utils.sheet_to_json(worksheet, { defval: null, raw: true });
+                        // raw: false -> ambil nilai yang sudah diformat sebagai teks (bukan angka mentah),
+                        // supaya NISN dengan angka 0 di depan (mis. "0012345678") tidak hilang jadi angka biasa.
+                        // cellDates: true (di opsi XLSX.read di atas) tetap membuat kolom tanggal terbaca sebagai Date object.
+                        const rows = XLSX.utils.sheet_to_json(worksheet, { defval: null, raw: false });
 
                         processImportedData(rows);
                     } catch (err) {
@@ -828,7 +894,7 @@
                 Papa.parse(file, {
                     header: true,
                     skipEmptyLines: true,
-                    dynamicTyping: true, // Konversi angka otomatis
+                    dynamicTyping: false, // Jangan konversi angka otomatis, agar NISN dengan angka 0 di depan (mis. "0012345678") tidak hilang jadi angka biasa
                     complete: function(results) {
                         processImportedData(results.data);
                     },
