@@ -459,6 +459,23 @@
         setInterval(updateLiveTime, 1000);
         updateLiveTime();
 
+        
+        // --- Helper: normalisasi nama & cek jadwal piket (piket1 s/d piket8) ---
+        const PIKET_COLS = ['piket1','piket2','piket3','piket4','piket5','piket6','piket7','piket8'];
+        const PIKET_SELECT = PIKET_COLS.join(', ');
+        const PIKET_COLORS = ['#3b82f6','#10b981','#f59e0b','#8b5cf6','#ec4899','#14b8a6','#f97316','#64748b'];
+        function normalisasiNama(s) {
+            return (s || '').toString().normalize('NFKC')
+                .replace(/\s+/g, ' ')
+                .replace(/\s*,\s*/g, ', ')
+                .trim().toLowerCase();
+        }
+        function isGuruTerjadwal(rows, namaGuru) {
+            const target = normalisasiNama(namaGuru);
+            if (!target || !rows) return false;
+            return rows.some(r => PIKET_COLS.some(c => normalisasiNama(r[c]) === target));
+        }
+
         // --- Load Data Piket Hari Ini ---
         async function loadPiketHariIni() {
             const now = new Date();
@@ -481,7 +498,7 @@
             try {
                 const { data, error } = await simpedikClient
                     .from('gurupiket')
-                    .select('piket1, piket2, piket3')
+                    .select(PIKET_SELECT)
                     .eq('hari', hariIni);
 
                 if (error) throw error;
@@ -491,11 +508,7 @@
                 // Cek apakah guru yang login ada di jadwal hari ini
                 let isScheduled = false;
                 if (data && data.length > 0) {
-                    isScheduled = data.some(piket => 
-                        piket.piket1 === namaGuru || 
-                        piket.piket2 === namaGuru || 
-                        piket.piket3 === namaGuru
-                    );
+                    isScheduled = isGuruTerjadwal(data, namaGuru);
                 }
 
                 // Jika tidak ada jadwal atau guru tidak terdaftar hari ini
@@ -516,9 +529,7 @@
                 // Ambil Foto Guru dari tabel dataguru
                 const teacherNames = [];
                 data.forEach(p => {
-                    if (p.piket1) teacherNames.push(p.piket1);
-                    if (p.piket2) teacherNames.push(p.piket2);
-                    if (p.piket3) teacherNames.push(p.piket3);
+                    PIKET_COLS.forEach(c => { if (p[c]) teacherNames.push(p[c]); });
                 });
 
                 let photoMap = {};
@@ -558,9 +569,9 @@
                         `;
                     };
 
-                    container.innerHTML += createGuruCard(piket.piket1, 'Guru Piket 1', 'fas fa-user-tie', '#3b82f6');
-                    container.innerHTML += createGuruCard(piket.piket2, 'Guru Piket 2', 'fas fa-user', '#10b981');
-                    container.innerHTML += createGuruCard(piket.piket3, 'Guru Piket 3', 'fas fa-user', '#f59e0b');
+                    PIKET_COLS.forEach((c, i) => {
+                        container.innerHTML += createGuruCard(piket[c], `Guru Piket ${i + 1}`, i === 0 ? 'fas fa-user-tie' : 'fas fa-user', PIKET_COLORS[i]);
+                    });
                 });
 
             } catch (err) {
@@ -613,7 +624,7 @@
                 // Check if guru is piket today
                 const { data, error } = await simpedikClient
                     .from('gurupiket')
-                    .select('piket1, piket2, piket3')
+                    .select(PIKET_SELECT)
                     .eq('hari', hariIni);
 
                 if (error) throw error;
@@ -621,11 +632,7 @@
                 // Check if current guru is in today's piket schedule
                 let isScheduled = false;
                 if (data && data.length > 0) {
-                    isScheduled = data.some(piket =>
-                        piket.piket1 === session.nama ||
-                        piket.piket2 === session.nama ||
-                        piket.piket3 === session.nama
-                    );
+                    isScheduled = isGuruTerjadwal(data, session.nama);
                 }
 
                 if (isScheduled) {
