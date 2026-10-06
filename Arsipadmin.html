@@ -74,7 +74,7 @@
             color: var(--secondary-color);
         }
 
-        /* --- Main Content --- */
+       
         .main-content {
             margin-top: var(--header-height);
             margin-left: 0; /* Default: Full width */
@@ -92,7 +92,7 @@
             margin-bottom: 20px;
         }
 
-        /* Table Styles */
+       
         .table-responsive {
             overflow-x: auto;
             margin-top: 20px;
@@ -162,7 +162,7 @@
             margin-top: 20px;
         }
 
-        /* --- Modal Styles --- */
+       
         .modal {
             display: none;
             position: fixed;
@@ -284,7 +284,7 @@
             opacity: 0.9;
         }
 
-        /* --- Toolbar Search & Aksi --- */
+     
         .arsip-toolbar {
             display: flex;
             justify-content: space-between;
@@ -366,14 +366,14 @@
         </a>
     </nav>
 
-    <!-- Main Content Area -->
+   
     <main class="main-content">
         <div class="dashboard-card">
             <h2>Halaman Arsip Admin</h2>
             <p style="color: #666; margin-top: 10px;">Kelola data arsip sekolah di sini.</p>
         </div>
         
-        <!-- Container 1: Search, Add, Export -->
+      
         <div class="dashboard-card">
             <div class="arsip-toolbar">
                 <div class="arsip-search">
@@ -407,7 +407,7 @@
             </div>
         </div>
 
-        <!-- Content Placeholder -->
+        
         <div class="dashboard-card">
             <p>Konten arsip akan ditampilkan di sini.</p>
         </div>
@@ -455,7 +455,7 @@
     </div>
 
     <script>
-        // --- Supabase Integration for Navbar ---
+        
         const supabaseUrl = 'https://ixccpgfllwerlifpcpdp.supabase.co';
         const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Iml4Y2NwZ2ZsbHdlcmxpZnBjcGRwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODI4NTE3MTEsImV4cCI6MjA5ODQyNzcxMX0.CwrrPcl0RkDK4zRWhfp7oTqwNlxOIZIb3IGUUzKTE9Q';
         const supabaseClient = supabase.createClient(supabaseUrl, supabaseKey);
@@ -494,24 +494,24 @@
         const cancelBtn = document.querySelector('.cancel-btn');
         const arsipForm = document.getElementById('arsipForm');
 
-        // Open Modal
+       
         const kodeArsipInput = document.getElementById('kodeArsip');
 
         if (addBtn) {
             addBtn.addEventListener('click', () => {
                 modal.classList.add('active');
-                // Set default date to today
+                
                 const today = new Date().toISOString().split('T')[0];
                 document.getElementById('tanggalUpload').value = today;
 
-                // Generate ID Arsip Otomatis
+               
                 const randomNum = Math.floor(1000 + Math.random() * 9000);
                 const newId = `IDA-${randomNum}`;
                 if(kodeArsipInput) kodeArsipInput.value = newId;
             });
         }
 
-        // Close Modal
+       
         function closeModal() {
             modal.classList.remove('active');
             arsipForm.reset();
@@ -526,7 +526,7 @@
             }
         });
 
-        // --- Handle Form Submit (Simpan Data Arsip) ---
+       
         arsipForm.addEventListener('submit', async (e) => {
             e.preventDefault();
 
@@ -535,7 +535,7 @@
             const tanggalUpload = document.getElementById('tanggalUpload').value;
             const fileArsip = document.getElementById('fileArsip').files[0];
 
-            // Validasi File
+            
             if (!fileArsip) {
                 alert('Harap pilih file arsip untuk diupload.');
                 return;
@@ -552,10 +552,10 @@
                     throw new Error(`Gagal mengunggah file: ${error.message}`);
                 }
 
-                // Dapatkan public URL file yang diunggah
+               
                 const fileUrl = `https://ixccpgfllwerlifpcpdp.supabase.co/storage/v1/object/public/aset/${fileName}`;
 
-                // Simpan data ke tabel Supabase
+                
                 const { error: dbError } = await supabaseClient
                     .from('arsip')
                     .insert([{ kode_arsip: kodeArsip, nama_arsip: namaArsip, tanggal_upload: tanggalUpload, file: fileUrl }]);
@@ -566,7 +566,7 @@
 
                 alert('Arsip berhasil disimpan!');
                 closeModal();
-                loadArsipData(); // Refresh table
+                loadArsipData(); 
 
             } catch (error) {
                 console.error('Error:', error);
@@ -574,7 +574,7 @@
             }
         });
 
-        // --- Load Data Arsip ---
+       
         async function loadArsipData() {
             const tableBody = document.querySelector('.custom-table tbody');
             tableBody.innerHTML = '<tr><td colspan="4" style="text-align:center;">Memuat data...</td></tr>';
@@ -614,7 +614,7 @@
             }
         }
 
-        // --- Export PDF Logic ---
+      
         document.getElementById('exportPdfBtn').addEventListener('click', () => {
             const { jsPDF } = window.jspdf;
             const doc = new jsPDF();
@@ -641,7 +641,7 @@
             doc.save('Data_Arsip.pdf');
         });
 
-        // Load data on start
+       
         document.addEventListener('DOMContentLoaded', loadArsipData);
     </script>
 </body>
