@@ -63,6 +63,27 @@
             font-size: 0.9rem;
         }
 
+        .login-clock {
+            text-align: center;
+            margin-bottom: 1rem;
+            padding: 0.5rem 0.75rem;
+            background: #f4f6fb;
+            border-radius: 8px;
+        }
+
+        .login-clock .clock-date {
+            color: #666;
+            font-size: 0.85rem;
+        }
+
+        .login-clock .clock-time {
+            color: #333;
+            font-size: 1.5rem;
+            font-weight: 700;
+            letter-spacing: 1px;
+            font-variant-numeric: tabular-nums;
+        }
+
         .form-group {
             margin-bottom: 1.5rem;
             position: relative;
@@ -1041,6 +1062,10 @@
                 <!-- Bagian Kanan: Form Login -->
                 <div class="login-right">
                     <div class="login-header">
+                        <div class="login-clock">
+                            <div class="clock-date" id="loginClockDate"></div>
+                            <div class="clock-time" id="loginClockTime"></div>
+                        </div>
                         <h2>Selamat Datang</h2>
                         <p>Silakan masuk ke akun Anda</p>
                     </div>
@@ -1743,6 +1768,8 @@
 
                         if (error || !data) throw new Error('Username atau Password salah.');
 
+                        catatAktivitasLogin(data.username, role);
+
                         showMessage('Login Berhasil! Mengalihkan...', 'success');
                         setTimeout(() => { window.location.href = 'dasboradmin.html'; }, 1000);
                     } catch (err) {
@@ -1761,6 +1788,8 @@
                             .single();
 
                         if (error || !data) throw new Error('Nama atau NIP tidak sesuai dengan data guru.');
+
+                        catatAktivitasLogin(data.nama_guru, role);
 
                         // Simpan sesi guru ke sessionStorage
                         sessionStorage.setItem('guru_session', JSON.stringify({
@@ -1797,6 +1826,8 @@
 
                         if (error || !data) throw new Error('Nama atau NISN tidak sesuai.');
 
+                        catatAktivitasLogin(data.nama_siswa, role);
+
                         // Simpan sesi siswa ke sessionStorage
                         sessionStorage.setItem('siswa_session', JSON.stringify(data));
 
@@ -1818,6 +1849,8 @@
                             .single();
 
                         if (error || !data) throw new Error('Nama atau Password tidak sesuai.');
+
+                        catatAktivitasLogin(data.nama, role);
 
                         // Simpan sesi PKL ke sessionStorage
                         sessionStorage.setItem('pkl_session', JSON.stringify(data));
@@ -1849,6 +1882,8 @@
 
                         if (error || !data) throw new Error('Nama atau Password tidak sesuai.');
 
+                        catatAktivitasLogin(data.nama_pegawai, role);
+
                         // Simpan sesi Admin TU ke sessionStorage
                         sessionStorage.setItem('admintu_session', JSON.stringify({
                             id: data.id,
@@ -1874,6 +1909,18 @@
                     }
                 }
             });
+
+            // Catat aktivitas login ke tabel record_user (tidak boleh menghambat proses login)
+            async function catatAktivitasLogin(nama, role) {
+                try {
+                    const { error } = await simpedikClient
+                        .from('record_user')
+                        .insert([{ nama: nama, role: role }]);
+                    if (error) console.warn('Gagal mencatat aktivitas login:', error.message);
+                } catch (e) {
+                    console.warn('Gagal mencatat aktivitas login:', e);
+                }
+            }
 
             // Fungsi Helper untuk menampilkan pesan
             function showMessage(text, type) {
@@ -2095,6 +2142,25 @@
             });
         });
     </script>
+    <!-- Tanggal & Jam berjalan di modal login -->
+    <script>
+    (function () {
+        const dateEl = document.getElementById('loginClockDate');
+        const timeEl = document.getElementById('loginClockTime');
+        if (!dateEl || !timeEl) return;
+        const pad = n => String(n).padStart(2, '0');
+        function tick() {
+            const now = new Date();
+            dateEl.textContent = now.toLocaleDateString('id-ID', {
+                weekday: 'long', day: 'numeric', month: 'long', year: 'numeric'
+            });
+            timeEl.textContent = pad(now.getHours()) + ':' + pad(now.getMinutes()) + ':' + pad(now.getSeconds());
+        }
+        tick();
+        setInterval(tick, 1000);
+    })();
+    </script>
+
              <!-- 🔥 SERVICE WORKER -->
     <script>
     if ('serviceWorker' in navigator) {
