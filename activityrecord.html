@@ -1,0 +1,451 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SIMPPEDIK-SMKN 1 Mentok</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.31/jspdf.plugin.autotable.min.js"></script>
+    <style>
+        :root { --primary-color:#667eea; --secondary-color:#764ba2; --header-height:60px; --bg-light:#f4f6f9; }
+        * { box-sizing:border-box; margin:0; padding:0; }
+        body { font-family:'Segoe UI',Tahoma,Geneva,Verdana,sans-serif; background:var(--bg-light); display:flex; flex-direction:column; height:100vh; overflow:hidden; }
+
+        /* Navbar (sama dengan piketharianadmin.html) */
+        .navbar { height:var(--header-height); background:#fff; display:flex; align-items:center; justify-content:space-between; padding:0 1rem; box-shadow:0 2px 5px rgba(0,0,0,.05); z-index:1002; position:fixed; top:0; left:0; right:0; }
+        .navbar-brand { display:flex; align-items:center; gap:10px; text-decoration:none; color:#333; }
+        .navbar-brand img { height:40px; width:auto; }
+        .navbar-brand span { font-weight:700; font-size:1.1rem; color:var(--secondary-color); }
+        .navbar-dashboard-btn { display:flex; align-items:center; gap:8px; padding:10px 18px; border:none; border-radius:6px; background:linear-gradient(to right,#667eea,#764ba2); color:#fff; font-weight:600; font-size:.9rem; text-decoration:none; cursor:pointer; transition:all .3s; }
+        .navbar-dashboard-btn:hover { opacity:.9; transform:translateY(-1px); }
+
+        .main-content { margin-top:var(--header-height); padding:2rem; flex:1; overflow-y:auto; }
+        .dashboard-card { background:#1f2937; color:#f3f4f6; padding:20px; border-radius:8px; box-shadow:0 4px 6px rgba(0,0,0,.3); margin-bottom:20px; border:1px solid #374151; }
+        .head-row { display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px; }
+        .head-row p { color:#9ca3af; margin-top:10px; }
+        select, .search-box input { padding:8px 10px; border:1px solid #4b5563; border-radius:5px; background:#374151; color:#fff; }
+        .search-box input { width:250px; }
+
+        .btn { padding:8px 15px; border:none; border-radius:5px; cursor:pointer; font-size:.9rem; color:#fff; display:inline-flex; align-items:center; gap:5px; transition:opacity .2s; }
+        .btn:hover { opacity:.9; }
+        .btn:disabled { opacity:.5; cursor:default; }
+        .btn-primary { background:var(--primary-color); }
+        .btn-danger { background:#ef4444; }
+        .btn-secondary { background:#6c757d; }
+        .btn.off { background:#374151; color:#9ca3af; }
+
+        .stats-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(240px,1fr)); gap:20px; margin-bottom:20px; }
+        .stat-card { background:#fff; padding:20px; border-radius:8px; box-shadow:0 4px 6px rgba(0,0,0,.1); display:flex; align-items:center; justify-content:space-between; gap:10px; border:2px solid #e5e7eb; }
+        .stat-info { min-width:0; flex:1; }
+        .stat-info h3 { font-size:2rem; margin-bottom:5px; color:#1f2937; }
+        .stat-info h3.name { font-size:1.2rem; line-height:1.3; margin-bottom:6px; }
+        .stat-info p { color:#6b7280; font-size:.9rem; font-weight:700; }
+        .stat-info small { display:block; color:#9ca3af; font-size:.8rem; margin-top:3px; }
+        .stat-icon { font-size:2.5rem; opacity:.9; }
+        .bar { height:8px; background:#e5e7eb; border-radius:4px; margin-top:8px; overflow:hidden; }
+        .bar div { height:100%; width:0; background:#10b981; transition:width .5s; }
+
+        .chart-box { position:relative; height:340px; margin-top:15px; }
+
+        .toolbar { display:flex; justify-content:space-between; align-items:center; margin-bottom:15px; flex-wrap:wrap; gap:10px; }
+        .actions { display:flex; gap:10px; flex-wrap:wrap; }
+        .table-responsive { width:100%; overflow-x:auto; -webkit-overflow-scrolling:touch; }
+        .custom-table { width:100%; border-collapse:collapse; white-space:nowrap; color:#e5e7eb; }
+        .custom-table th, .custom-table td { padding:12px 15px; text-align:left; border-bottom:1px solid #374151; }
+        .custom-table th { background:#111827; color:#9ca3af; font-weight:600; }
+        .custom-table tr:hover { background:#374151; }
+        .badge { padding:3px 10px; border-radius:12px; font-size:.8rem; font-weight:600; color:#fff; }
+        .b-rajin { background:#10b981; } .b-jarang { background:#f59e0b; } .b-nol { background:#ef4444; }
+        .modal { display:none; position:fixed; inset:0; background:rgba(0,0,0,.6); z-index:2000; align-items:center; justify-content:center; padding:15px; }
+        .modal.show { display:flex; }
+        .modal-box { background:#1f2937; color:#f3f4f6; border:1px solid #374151; border-radius:8px; width:100%; max-width:600px; max-height:85vh; display:flex; flex-direction:column; box-shadow:0 10px 25px rgba(0,0,0,.5); }
+        .modal-head { display:flex; justify-content:space-between; align-items:center; gap:10px; padding:16px 20px; border-bottom:1px solid #374151; }
+        .modal-head h3 { font-size:1.1rem; }
+        .modal-close { background:none; border:none; color:#9ca3af; font-size:1.6rem; line-height:1; cursor:pointer; }
+        .modal-sub { padding:12px 20px 0; color:#9ca3af; font-size:.9rem; }
+        .modal-body { padding:12px 20px 20px; overflow:auto; }
+        .main-footer { text-align:center; padding:20px; color:#888; font-size:.85rem; border-top:1px solid #eee; margin-top:20px; }
+
+        @media (max-width:768px) {
+            .main-content { padding:2rem 5px; }
+            .dashboard-card { padding:15px; }
+            .navbar-brand span { font-size:1rem; }
+            .stats-grid { grid-template-columns:1fr; }
+            .search-box { flex:1; } .search-box input { width:100%; }
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar">
+        <a href="dasboradmin.html" class="navbar-brand">
+            <img src="" alt="Logo Sekolah" style="display:none;">
+            <span></span>
+        </a>
+        <a href="dasboradmin.html" class="navbar-dashboard-btn"><i class="fas fa-th-large"></i> Dashboard</a>
+    </nav>
+
+    <main class="main-content">
+        <div class="dashboard-card head-row">
+            <div>
+                <h2>Laporan Aktivitas Guru</h2>
+                <p>Rekap login guru di aplikasi. Guru dengan 2 kali login atau kurang pada periode terpilih dihitung jarang mengakses.</p>
+            </div>
+            <select id="periodSelect" aria-label="Periode">
+                <option value="7">7 hari terakhir</option>
+                <option value="30" selected>30 hari terakhir</option>
+                <option value="month">Bulan ini</option>
+                <option value="all">Semua waktu</option>
+            </select>
+        </div>
+
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-info"><h3 id="statTotal">0</h3><p>Total Aktivitas Login</p><small id="statTotalSub">&nbsp;</small></div>
+                <i class="fas fa-chart-line stat-icon" style="color:#3b82f6;"></i>
+            </div>
+            <div class="stat-card">
+                <div class="stat-info"><h3 class="name" id="statTop">-</h3><p>Guru Terajin</p><small id="statTopSub">&nbsp;</small></div>
+                <i class="fas fa-trophy stat-icon" style="color:#f59e0b;"></i>
+            </div>
+            <div class="stat-card">
+                <div class="stat-info"><h3 id="statJarang">0</h3><p>Guru Jarang / Tidak Pernah Akses</p><small id="statJarangSub">&nbsp;</small></div>
+                <i class="fas fa-user-slash stat-icon" style="color:#ef4444;"></i>
+            </div>
+            <div class="stat-card">
+                <div class="stat-info"><h3 id="statPct">0%</h3><p>Persentase Kerajinan</p><div class="bar"><div id="pctBar"></div></div><small id="statPctSub">&nbsp;</small></div>
+                <i class="fas fa-percent stat-icon" style="color:#10b981;"></i>
+            </div>
+        </div>
+
+        <div class="dashboard-card">
+            <h3>10 Guru Teraktif</h3>
+            <div class="chart-box"><canvas id="topChart"></canvas></div>
+        </div>
+
+        <div class="dashboard-card">
+            <div class="toolbar">
+                <div class="actions">
+                    <button class="btn btn-primary" id="refreshBtn" title="Refresh" aria-label="Refresh"><i class="fas fa-sync-alt"></i></button>
+                    <button class="btn btn-danger" id="exportPdfBtn" title="Export Pdf" aria-label="Export Pdf"><i class="fas fa-file-pdf"></i></button>
+                    <button class="btn btn-primary" id="tabRekap">Rekap per Guru</button>
+                    <button class="btn off" id="tabRiwayat">Riwayat Login</button>
+                </div>
+                <div class="search-box"><input type="text" id="searchInput" placeholder="Cari nama guru..."></div>
+            </div>
+            <div class="table-responsive">
+                <table class="custom-table">
+                    <thead id="tableHead"></thead>
+                    <tbody id="tableBody"></tbody>
+                </table>
+            </div>
+            <div id="paginationControls" style="display:flex; justify-content:center; align-items:center; gap:10px; margin-top:20px;"></div>
+        </div>
+
+        <footer class="main-footer">
+            <p>&copy; 2026 SMKN 1 Mentok.</p>
+            <p>Project Manager : Adi Kusumardi, S.T., M.Pd.</p>
+            <p>Software Developer : KenjiStudioDeveloper</p>
+        </footer>
+    </main>
+
+    <div class="modal" id="detailModal">
+        <div class="modal-box">
+            <div class="modal-head">
+                <h3 id="detailTitle">Riwayat Login</h3>
+                <div style="display:flex;align-items:center;gap:10px;">
+                    <button class="btn btn-danger" id="detailPdf" title="Export Pdf" aria-label="Export Pdf" style="padding:6px 10px;"><i class="fas fa-file-pdf"></i></button>
+                    <button class="modal-close" id="detailClose" aria-label="Tutup">&times;</button>
+                </div>
+            </div>
+            <p class="modal-sub" id="detailSummary"></p>
+            <div class="modal-body">
+                <table class="custom-table">
+                    <thead><tr><th>No</th><th>Tanggal</th><th>Jam (WIB)</th></tr></thead>
+                    <tbody id="detailBody"></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const supabaseUrl = 'https://ixccpgfllwerlifpcpdp.supabase.co';
+        const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Iml4Y2NwZ2ZsbHdlcmxpZnBjcGRwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODI4NTE3MTEsImV4cCI6MjA5ODQyNzcxMX0.CwrrPcl0RkDK4zRWhfp7oTqwNlxOIZIb3IGUUzKTE9Q';
+        const supabaseClient = supabase.createClient(supabaseUrl, supabaseKey);
+
+        const JARANG_MAX = 2;      // login <= 2 pada periode = jarang
+        const PER_PAGE = 10;
+        let schoolData = {}, guruList = [], logs = [], rekap = [], viewLogs = [];
+        let mode = 'rekap', page = 1, chart = null;
+        const $ = id => document.getElementById(id);
+        const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+        const norm = s => String(s || '').trim().toLowerCase();
+        const pad = n => String(n).padStart(2, '0');
+        const ymd = d => `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+        const fmtTgl = t => t ? new Date(t + 'T00:00:00').toLocaleDateString('id-ID', { weekday:'long', day:'numeric', month:'long', year:'numeric' }) : '-';
+        const fmtWaktu = ts => ts ? new Date(ts).toLocaleTimeString('id-ID', { timeZone:'Asia/Jakarta', hour12:false }) : '-';
+        const fmtLast = ts => ts ? new Date(ts).toLocaleString('id-ID', { timeZone:'Asia/Jakarta', day:'numeric', month:'short', year:'numeric', hour:'2-digit', minute:'2-digit', hour12:false }) : 'Belum pernah';
+
+        async function loadSchoolIdentity() {
+            try {
+                const { data } = await supabaseClient.from('identitassekolah').select('nama_sekolah, logo, kop_sekolah').limit(1).single();
+                if (!data) return;
+                schoolData = data;
+                if (data.nama_sekolah) document.querySelector('.navbar-brand span').textContent = data.nama_sekolah;
+                if (data.logo) { const img = document.querySelector('.navbar-brand img'); img.src = data.logo; img.style.display = 'block'; }
+            } catch (e) { console.error(e); }
+        }
+
+        async function fetchAll(build) {
+            let all = [], from = 0;
+            for (;;) {
+                const { data, error } = await build().range(from, from + 999);
+                if (error) throw error;
+                all = all.concat(data);
+                if (data.length < 1000) return all;
+                from += 1000;
+            }
+        }
+
+        async function loadData() {
+            $('tableBody').innerHTML = '<tr><td colspan="6" style="text-align:center;">Memuat data...</td></tr>';
+            try {
+                guruList = await fetchAll(() => supabaseClient.from('dataguru').select('id_guru, nama_guru').order('nama_guru'));
+                logs = await fetchAll(() => supabaseClient.from('record_user').select('id, nama, tanggal, timestamp').eq('role', 'Guru').order('timestamp', { ascending: false }));
+                compute();
+            } catch (e) {
+                console.error(e);
+                $('tableBody').innerHTML = `<tr><td colspan="6" style="text-align:center;color:#f87171;">Gagal memuat: ${esc(e.message)}</td></tr>`;
+            }
+        }
+
+        function startDate() {
+            const v = $('periodSelect').value, d = new Date();
+            if (v === 'all') return null;
+            if (v === 'month') d.setDate(1); else d.setDate(d.getDate() - (Number(v) - 1));
+            return ymd(d);
+        }
+
+        function compute() {
+            const start = startDate();
+            viewLogs = logs.filter(l => !start || l.tanggal >= start);
+            const map = new Map(guruList.map(g => [norm(g.nama_guru), { id: g.id_guru, nama: g.nama_guru, n: 0, last: null }]));
+            viewLogs.forEach(l => {
+                const r = map.get(norm(l.nama));
+                if (!r) return;
+                r.n++;
+                if (!r.last) r.last = l.timestamp; // data sudah urut terbaru dulu
+            });
+            rekap = [...map.values()].sort((a, b) => b.n - a.n || a.nama.localeCompare(b.nama));
+
+            const total = rekap.length, nol = rekap.filter(r => r.n === 0).length;
+            const jarang = rekap.filter(r => r.n <= JARANG_MAX).length, rajin = total - jarang;
+            const pct = total ? Math.round(rajin / total * 100) : 0;
+            const top = rekap[0] && rekap[0].n > 0 ? rekap[0] : null;
+
+            $('statTotal').textContent = viewLogs.length;
+            $('statTotalSub').textContent = 'login guru pada periode ini';
+            $('statTop').textContent = top ? top.nama : '-';
+            $('statTopSub').textContent = top ? `${top.n} kali login` : 'Belum ada aktivitas';
+            $('statJarang').textContent = jarang;
+            $('statJarangSub').textContent = `${nol} tidak pernah, ${jarang - nol} jarang (≤ ${JARANG_MAX}x)`;
+            $('statPct').textContent = pct + '%';
+            $('pctBar').style.width = pct + '%';
+            $('statPctSub').textContent = `${rajin} dari ${total} guru rajin mengakses`;
+            drawChart();
+            renderTable(1);
+        }
+
+        function drawChart() {
+            const top = rekap.filter(r => r.n > 0).slice(0, 10);
+            if (chart) chart.destroy();
+            chart = new Chart($('topChart'), {
+                type: 'bar',
+                data: { labels: top.map(r => r.nama), datasets: [{ label: 'Jumlah login', data: top.map(r => r.n), backgroundColor: '#667eea', borderRadius: 4 }] },
+                options: {
+                    indexAxis: 'y', responsive: true, maintainAspectRatio: false,
+                    plugins: { legend: { display: false } },
+                    scales: {
+                        x: { beginAtZero: true, ticks: { color: '#9ca3af', precision: 0 }, grid: { color: '#374151' } },
+                        y: { ticks: { color: '#e5e7eb' }, grid: { display: false } }
+                    }
+                }
+            });
+        }
+
+        function currentRows() {
+            const q = $('searchInput').value.toLowerCase();
+            const src = mode === 'rekap' ? rekap : viewLogs;
+            return src.filter(r => (r.nama || '').toLowerCase().includes(q));
+        }
+
+        function status(n) {
+            return n === 0 ? ['Tidak pernah', 'b-nol'] : n <= JARANG_MAX ? ['Jarang', 'b-jarang'] : ['Rajin', 'b-rajin'];
+        }
+
+        function renderTable(p = 1) {
+            page = p;
+            const rows = currentRows(), pages = Math.ceil(rows.length / PER_PAGE), start = (p - 1) * PER_PAGE;
+            $('tableHead').innerHTML = mode === 'rekap'
+                ? '<tr><th>No</th><th>Nama Guru</th><th>Jumlah Login</th><th>Login Terakhir</th><th>Status</th><th>Aksi</th></tr>'
+                : '<tr><th>No</th><th>Nama Guru</th><th>Tanggal</th><th>Jam (WIB)</th></tr>';
+            const cols = mode === 'rekap' ? 6 : 4;
+            $('tableBody').innerHTML = rows.length ? rows.slice(start, start + PER_PAGE).map((r, i) => {
+                const no = start + i + 1;
+                if (mode === 'rekap') {
+                    const [label, cls] = status(r.n);
+                    return `<tr><td>${no}</td><td>${esc(r.nama)}</td><td>${r.n}</td><td>${fmtLast(r.last)}</td><td><span class="badge ${cls}">${label}</span></td><td><button class="btn btn-primary btn-detail" style="padding:5px 10px;font-size:.8rem;" data-nama="${esc(r.nama)}"><i class="fas fa-eye"></i> Detail</button></td></tr>`;
+                }
+                return `<tr><td>${no}</td><td>${esc(r.nama)}</td><td>${fmtTgl(r.tanggal)}</td><td>${fmtWaktu(r.timestamp)}</td></tr>`;
+            }).join('') : `<tr><td colspan="${cols}" style="text-align:center;padding:20px;">Data tidak ditemukan.</td></tr>`;
+
+            const box = $('paginationControls');
+            box.innerHTML = '';
+            if (pages <= 1) return;
+            const mk = (icon, dis, go) => { const b = document.createElement('button'); b.className = 'btn btn-secondary'; b.innerHTML = `<i class="fas fa-chevron-${icon}"></i>`; b.disabled = dis; b.onclick = () => renderTable(go); return b; };
+            const info = document.createElement('span');
+            info.style.fontWeight = '600';
+            info.textContent = `Halaman ${p} dari ${pages}`;
+            box.append(mk('left', p === 1, p - 1), info, mk('right', p === pages, p + 1));
+        }
+
+        function setMode(m) {
+            mode = m;
+            $('tabRekap').className = 'btn ' + (m === 'rekap' ? 'btn-primary' : 'off');
+            $('tabRiwayat').className = 'btn ' + (m === 'riwayat' ? 'btn-primary' : 'off');
+            renderTable(1);
+        }
+
+        let detailNama = '', detailData = [];
+        async function showDetail(nama) {
+            detailNama = nama;
+            detailData = [];
+            $('detailTitle').textContent = 'Riwayat Login - ' + nama;
+            $('detailSummary').textContent = 'Memuat data...';
+            $('detailBody').innerHTML = '';
+            $('detailModal').classList.add('show');
+            try {
+                const data = await fetchAll(() => supabaseClient.from('record_user').select('id, tanggal, timestamp').eq('role', 'Guru').eq('nama', nama).order('timestamp', { ascending: false }));
+                detailData = data;
+                $('detailSummary').textContent = data.length ? `Total ${data.length} kali login. Terakhir: ${fmtLast(data[0].timestamp)}` : 'Guru ini belum pernah login.';
+                $('detailBody').innerHTML = data.length
+                    ? data.map((r, i) => `<tr><td>${i + 1}</td><td>${fmtTgl(r.tanggal)}</td><td>${fmtWaktu(r.timestamp)}</td></tr>`).join('')
+                    : '<tr><td colspan="3" style="text-align:center;padding:20px;">Belum ada riwayat login.</td></tr>';
+            } catch (e) {
+                console.error(e);
+                $('detailSummary').textContent = '';
+                $('detailBody').innerHTML = `<tr><td colspan="3" style="text-align:center;color:#f87171;">Gagal memuat: ${esc(e.message)}</td></tr>`;
+            }
+        }
+        const closeDetail = () => $('detailModal').classList.remove('show');
+        $('tableBody').addEventListener('click', e => {
+            const b = e.target.closest('.btn-detail');
+            if (b) showDetail(b.dataset.nama);
+        });
+        $('detailClose').onclick = closeDetail;
+        $('detailPdf').onclick = async () => {
+            if (!detailData.length) { alert('Tidak ada riwayat login untuk diexport.'); return; }
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF('p', 'mm', 'a4');
+            const w = doc.internal.pageSize.getWidth();
+            let y = 20;
+            if (schoolData.kop_sekolah) {
+                try {
+                    const blob = await (await fetch(schoolData.kop_sekolah)).blob();
+                    const b64 = await new Promise(res => { const r = new FileReader(); r.onloadend = () => res(r.result); r.readAsDataURL(blob); });
+                    const pr = doc.getImageProperties(b64), h = pr.height * (w - 20) / pr.width;
+                    doc.addImage(b64, 'PNG', 10, 10, w - 20, h);
+                    y = 20 + h;
+                } catch (e) { console.error('Gagal memuat KOP:', e); }
+            }
+            doc.setFontSize(16);
+            doc.text('Riwayat Login Guru', w / 2, y, { align: 'center' });
+            y += 8;
+            doc.setFontSize(11);
+            doc.setTextColor(100);
+            doc.text(detailNama, w / 2, y, { align: 'center' });
+            y += 6;
+            doc.text(`Total ${detailData.length} kali login. Terakhir: ${fmtLast(detailData[0].timestamp)}`, w / 2, y, { align: 'center' });
+            doc.autoTable({
+                head: [['No', 'Tanggal', 'Jam (WIB)']],
+                body: detailData.map((r, i) => [i + 1, fmtTgl(r.tanggal), fmtWaktu(r.timestamp)]),
+                startY: y + 6, theme: 'grid', headStyles: { fillColor: [102, 126, 234] }, styles: { fontSize: 9 }
+            });
+            doc.save('Riwayat_Login_' + detailNama.replace(/[^\w]+/g, '_') + '.pdf');
+        };
+        $('detailModal').addEventListener('click', e => { if (e.target === $('detailModal')) closeDetail(); });
+        document.addEventListener('keydown', e => { if (e.key === 'Escape') closeDetail(); });
+
+        $('tabRekap').onclick = () => setMode('rekap');
+        $('tabRiwayat').onclick = () => setMode('riwayat');
+        $('searchInput').addEventListener('input', () => renderTable(1));
+        $('periodSelect').addEventListener('change', compute);
+        $('refreshBtn').addEventListener('click', loadData);
+
+        $('exportPdfBtn').addEventListener('click', async () => {
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF('l', 'mm', 'a4');
+            const w = doc.internal.pageSize.getWidth();
+            let y = 20;
+            if (schoolData.kop_sekolah) {
+                try {
+                    const blob = await (await fetch(schoolData.kop_sekolah)).blob();
+                    const b64 = await new Promise(res => { const r = new FileReader(); r.onloadend = () => res(r.result); r.readAsDataURL(blob); });
+                    const pr = doc.getImageProperties(b64), h = pr.height * (w - 20) / pr.width;
+                    doc.addImage(b64, 'PNG', 10, 10, w - 20, h);
+                    y = 20 + h;
+                } catch (e) { console.error('Gagal memuat KOP:', e); }
+            }
+            doc.setFontSize(18);
+            doc.text(mode === 'rekap' ? 'Laporan Aktivitas Guru' : 'Riwayat Login Guru', w / 2, y, { align: 'center' });
+            y += 8;
+            doc.setFontSize(11);
+            doc.setTextColor(100);
+            doc.text(`${schoolData.nama_sekolah || ''} - Periode: ${$('periodSelect').selectedOptions[0].text}`, w / 2, y, { align: 'center' });
+            // Kartu ringkasan (sama dengan kartu di halaman)
+            const cards = [
+                ['Total Aktivitas Login', $('statTotal').textContent, $('statTotalSub').textContent],
+                ['Guru Terajin', $('statTop').textContent, $('statTopSub').textContent],
+                ['Guru Jarang / Tidak Pernah Akses', $('statJarang').textContent, $('statJarangSub').textContent],
+                ['Persentase Kerajinan', $('statPct').textContent, $('statPctSub').textContent]
+            ];
+            const gap = 4, cw = (w - 20 - gap * 3) / 4, ch = 28;
+            y += 6;
+            cards.forEach((c, i) => {
+                const x = 10 + i * (cw + gap);
+                doc.setDrawColor(200);
+                doc.setFillColor(248, 249, 252);
+                doc.roundedRect(x, y, cw, ch, 2, 2, 'FD');
+                doc.setFont(undefined, 'normal');
+                doc.setTextColor(100);
+                doc.setFontSize(8);
+                doc.text(doc.splitTextToSize(c[0], cw - 6)[0], x + 3, y + 6);
+                let fs = c[1].length > 8 ? 11 : 16;
+                doc.setFont(undefined, 'bold');
+                doc.setFontSize(fs);
+                while (fs > 7 && doc.getTextWidth(c[1]) > cw - 6) { fs--; doc.setFontSize(fs); }
+                doc.setTextColor(30);
+                doc.text(c[1], x + 3, y + 15);
+                doc.setFont(undefined, 'normal');
+                doc.setFontSize(7);
+                doc.setTextColor(120);
+                doc.text(doc.splitTextToSize(c[2].replace('≤', '<='), cw - 6).slice(0, 2), x + 3, y + 21);
+            });
+            y += ch;
+            doc.setTextColor(0);
+
+            const rows = currentRows();
+            const head = mode === 'rekap' ? [['No', 'Nama Guru', 'Jumlah Login', 'Login Terakhir', 'Status']] : [['No', 'Nama Guru', 'Tanggal', 'Jam (WIB)']];
+            const body = rows.map((r, i) => mode === 'rekap'
+                ? [i + 1, r.nama, r.n, fmtLast(r.last), status(r.n)[0]]
+                : [i + 1, r.nama, fmtTgl(r.tanggal), fmtWaktu(r.timestamp)]);
+            doc.autoTable({ head, body, startY: y + 6, theme: 'grid', headStyles: { fillColor: [102, 126, 234] }, styles: { fontSize: 9 } });
+            doc.save(mode === 'rekap' ? 'Laporan_Aktivitas_Guru.pdf' : 'Riwayat_Login_Guru.pdf');
+        });
+
+        document.addEventListener('DOMContentLoaded', () => { loadSchoolIdentity(); loadData(); });
+    </script>
+</body>
+</html>
