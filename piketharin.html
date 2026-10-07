@@ -575,11 +575,12 @@
         const PIKET_COLS = ['piket1','piket2','piket3','piket4','piket5','piket6','piket7','piket8'];
         const PIKET_SELECT = PIKET_COLS.join(', ');
         const PIKET_COLORS = ['#3b82f6','#10b981','#f59e0b','#8b5cf6','#ec4899','#14b8a6','#f97316','#64748b'];
+        // Normalisasi agresif: abaikan huruf besar/kecil, spasi, titik, koma, apostrof, tanda hubung
+        // supaya "Budi, S.Pd" == "BUDI,S. Pd." == "Budi S.Pd"
         function normalisasiNama(s) {
             return (s || '').toString().normalize('NFKC')
-                .replace(/\s+/g, ' ')
-                .replace(/\s*,\s*/g, ', ')
-                .trim().toLowerCase();
+                .toLowerCase()
+                .replace(/[^a-z0-9]/g, '');
         }
         function isGuruTerjadwal(rows, namaGuru) {
             const target = normalisasiNama(namaGuru);
@@ -610,7 +611,7 @@
                 const { data, error } = await supabaseClient
                     .from('gurupiket')
                     .select(PIKET_SELECT)
-                    .eq('hari', hariIni);
+                    .ilike('hari', hariIni.trim());
 
                 if (error) throw error;
 
@@ -621,6 +622,26 @@
                 let isScheduled = false;
                 if (data && data.length > 0) {
                     isScheduled = isGuruTerjadwal(data, namaGuru);
+
+                    // Fallback: cocokkan lewat NIP (nama di sesi login bisa beda tulisan dengan dataguru)
+                    if (!isScheduled && session && session.nip) {
+                        const names = [];
+                        data.forEach(r => PIKET_COLS.forEach(c => { if (r[c]) names.push(r[c]); }));
+                        if (names.length > 0) {
+                            const { data: gd } = await supabaseClient
+                                .from('dataguru').select('nama_guru, nip').in('nama_guru', names);
+                            const nipSesi = String(session.nip).replace(/\s/g, '');
+                            isScheduled = (gd || []).some(g => g.nip && String(g.nip).replace(/\s/g, '') === nipSesi);
+                        }
+                    }
+
+                    if (!isScheduled) {
+                        console.warn('[Piket] Tidak cocok. Nama sesi:', JSON.stringify(namaGuru),
+                            '| Hari:', hariIni,
+                            '| Guru terjadwal:', data.flatMap(r => PIKET_COLS.map(c => r[c]).filter(Boolean)));
+                    }
+                } else {
+                    console.warn('[Piket] Tidak ada baris gurupiket untuk hari:', hariIni);
                 }
 
                 // Jika tidak ada jadwal atau guru tidak terdaftar hari ini
