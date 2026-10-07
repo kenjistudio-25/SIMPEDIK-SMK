@@ -1,7 +1,7 @@
 {
   "name": "SIMPPedik",
   "short_name": "SIMPEDIK",
-  "start_url": "/SIMPPedik/",
+  "start_url": "https://kenjistudio-25.github.io/SIMPEDIK-SMK/",
   "display": "standalone",
   "background_color": "#ffffff",
   "theme_color": "#667eea",
