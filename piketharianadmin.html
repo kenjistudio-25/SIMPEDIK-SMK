@@ -248,6 +248,42 @@
             background-color: #374151;
         }
 
+        /* --- Filter Bar --- */
+        .piket-filters {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            align-items: flex-end;
+            margin-bottom: 10px;
+        }
+        .filter-group {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+            min-width: 160px;
+        }
+        .filter-group label {
+            font-size: 0.8rem;
+            color: #9ca3af;
+            font-weight: 600;
+        }
+        .filter-group select {
+            padding: 8px 10px;
+            border: 1px solid #4b5563;
+            border-radius: 5px;
+            background-color: #374151;
+            color: white;
+            font-size: 0.9rem;
+        }
+        .filter-info {
+            font-size: 0.85rem;
+            color: #9ca3af;
+            margin-bottom: 5px;
+        }
+        @media (max-width: 768px) {
+            .filter-group { flex: 1 1 140px; min-width: 0; }
+        }
+
         /* --- Stats Card Styles (Light Mode) --- */
         .stats-grid {
             display: grid;
@@ -328,6 +364,19 @@
                     <input type="text" id="searchInput" placeholder="Cari data...">
                 </div>
             </div>
+
+            <div class="piket-filters">
+                <div class="filter-group">
+                    <label for="filterBulan">Bulan</label>
+                    <select id="filterBulan"><option value="">Semua Bulan</option></select>
+                </div>
+                <div class="filter-group">
+                    <label for="filterKelas">Kelas</label>
+                    <select id="filterKelas"><option value="">Semua Kelas</option></select>
+                </div>
+                <button class="btn btn-secondary" id="resetFilterBtn" title="Reset Filter" aria-label="Reset Filter"><i class="fas fa-undo"></i> Reset</button>
+            </div>
+            <div class="filter-info" id="filterInfo"></div>
 
             <div class="table-responsive">
                 <table class="custom-table">
@@ -450,6 +499,7 @@
                 if (error) throw error;
 
                 jurnalDataList = data || [];
+                populateFilters();
                 renderTable(1);
                 loadStats(); // Update stats when data loads
 
@@ -459,24 +509,93 @@
             }
         }
 
+        // --- Filter Bulan & Kelas ---
+        const NAMA_BULAN = ['Januari','Februari','Maret','April','Mei','Juni','Juli','Agustus','September','Oktober','November','Desember'];
+
+        function getMonthKey(tanggal) {
+            // Ambil "YYYY-MM" langsung dari string agar tidak terpengaruh timezone
+            return tanggal ? String(tanggal).substring(0, 7) : '';
+        }
+
+        function monthLabel(key) {
+            const [y, m] = key.split('-');
+            return `${NAMA_BULAN[parseInt(m, 10) - 1] || m} ${y}`;
+        }
+
+        function populateFilters() {
+            const selBulan = document.getElementById('filterBulan');
+            const selKelas = document.getElementById('filterKelas');
+            const prevBulan = selBulan.value;
+            const prevKelas = selKelas.value;
+
+            const bulanSet = new Set();
+            const kelasSet = new Set();
+            jurnalDataList.forEach(item => {
+                const key = getMonthKey(item.tanggal);
+                if (key) bulanSet.add(key);
+                if (item.kelas) kelasSet.add(item.kelas);
+            });
+
+            const bulanList = [...bulanSet].sort().reverse(); // terbaru di atas
+            const kelasList = [...kelasSet].sort((a, b) => a.localeCompare(b, 'id', { numeric: true }));
+
+            selBulan.innerHTML = '<option value="">Semua Bulan</option>' +
+                bulanList.map(k => `<option value="${k}">${monthLabel(k)}</option>`).join('');
+            selKelas.innerHTML = '<option value="">Semua Kelas</option>' +
+                kelasList.map(k => `<option value="${k}">${k}</option>`).join('');
+
+            // Pertahankan pilihan sebelumnya jika masih tersedia
+            if (bulanSet.has(prevBulan)) selBulan.value = prevBulan;
+            if (kelasSet.has(prevKelas)) selKelas.value = prevKelas;
+        }
+
+        // Satu sumber data terfilter: dipakai tabel DAN export PDF
+        function getFilteredData() {
+            const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+            const bulan = document.getElementById('filterBulan').value;
+            const kelas = document.getElementById('filterKelas').value;
+
+            return jurnalDataList.filter(item => {
+                if (bulan && getMonthKey(item.tanggal) !== bulan) return false;
+                if (kelas && item.kelas !== kelas) return false;
+                if (searchTerm) {
+                    const text = (
+                        (item.id_piket || '') + ' ' +
+                        (item.nama_siswa || '') + ' ' +
+                        (item.kelas || '') + ' ' +
+                        (item.area || '') + ' ' +
+                        (item.nisn || '') + ' ' +
+                        (item.id_petugas || '')
+                    ).toLowerCase();
+                    if (!text.includes(searchTerm)) return false;
+                }
+                return true;
+            });
+        }
+
+        function getFilterDescription() {
+            const bulan = document.getElementById('filterBulan').value;
+            const kelas = document.getElementById('filterKelas').value;
+            const parts = [];
+            if (bulan) parts.push('Bulan: ' + monthLabel(bulan));
+            if (kelas) parts.push('Kelas: ' + kelas);
+            return parts.join('  |  ');
+        }
+
+        function updateFilterInfo(total) {
+            const desc = getFilterDescription();
+            document.getElementById('filterInfo').textContent =
+                desc ? `Filter aktif - ${desc} (${total} data)` : '';
+        }
+
         // Render Table & Pagination
         function renderTable(page = 1) {
             currentPage = page;
             const tableBody = document.getElementById('jurnalTableBody');
-            const searchFilter = document.getElementById('searchInput').value.toLowerCase();
 
-            // Filter Data
-            const filteredData = jurnalDataList.filter(item => {
-                const text = (
-                    (item.id_piket || '') + ' ' +
-                    (item.nama_siswa || '') + ' ' + 
-                    (item.kelas || '') + ' ' + 
-                    (item.area || '') + ' ' + 
-                    (item.nisn || '') + ' ' +
-                    (item.id_petugas || '')
-                ).toLowerCase();
-                return text.includes(searchFilter);
-            });
+            // Filter Data (pencarian + bulan + kelas)
+            const filteredData = getFilteredData();
+            updateFilterInfo(filteredData.length);
 
             // Pagination Calculation
             const totalPages = Math.ceil(filteredData.length / itemsPerPage);
@@ -559,10 +678,25 @@
 
         // Event Listeners
         document.getElementById('searchInput').addEventListener('input', () => renderTable(1));
+        document.getElementById('filterBulan').addEventListener('change', () => renderTable(1));
+        document.getElementById('filterKelas').addEventListener('change', () => renderTable(1));
+        document.getElementById('resetFilterBtn').addEventListener('click', () => {
+            document.getElementById('filterBulan').value = '';
+            document.getElementById('filterKelas').value = '';
+            document.getElementById('searchInput').value = '';
+            renderTable(1);
+        });
         document.getElementById('refreshBtn').addEventListener('click', loadJurnalData);
 
         // Export PDF
         document.getElementById('exportPdfBtn').addEventListener('click', async () => {
+            // Data yang diexport = data terfilter (atau semua data jika tidak ada filter)
+            const dataToExport = getFilteredData();
+            if (dataToExport.length === 0) {
+                alert('Tidak ada data untuk diexport.');
+                return;
+            }
+
             const { jsPDF } = window.jspdf;
             const doc = new jsPDF('l', 'mm', 'a4'); // Landscape
             const pageWidth = doc.internal.pageSize.getWidth();
@@ -600,24 +734,13 @@
             doc.text(schoolName, pageWidth / 2, yPos, { align: 'center' });
             yPos += 10;
 
-            // Ambil data berdasarkan pencarian atau semua data jika kosong
-            const searchInput = document.getElementById('searchInput');
-            const searchTerm = searchInput ? searchInput.value.toLowerCase() : '';
-            
-            let dataToExport = jurnalDataList;
-
-            if (searchTerm) {
-                dataToExport = jurnalDataList.filter(item => {
-                    const text = (
-                        (item.id_piket || '') + ' ' +
-                        (item.nama_siswa || '') + ' ' + 
-                        (item.kelas || '') + ' ' + 
-                        (item.area || '') + ' ' + 
-                        (item.nisn || '') + ' ' +
-                        (item.id_petugas || '')
-                    ).toLowerCase();
-                    return text.includes(searchTerm);
-                });
+            // Keterangan filter di bawah nama sekolah (jika ada filter aktif)
+            const filterDesc = getFilterDescription();
+            if (filterDesc) {
+                doc.setFontSize(11);
+                doc.setTextColor(60);
+                doc.text(filterDesc, pageWidth / 2, yPos, { align: 'center' });
+                yPos += 8;
             }
 
             const tableBody = dataToExport.map(item => {
@@ -647,7 +770,12 @@
                 styles: { fontSize: 9 }
             });
 
-            doc.save('Laporan_Piket_Harian.pdf');
+            let fileName = 'Laporan_Piket_Harian';
+            const fBulan = document.getElementById('filterBulan').value;
+            const fKelas = document.getElementById('filterKelas').value;
+            if (fBulan) fileName += '_' + monthLabel(fBulan).replace(/\s+/g, '_');
+            if (fKelas) fileName += '_' + fKelas.replace(/[^\w-]+/g, '_');
+            doc.save(fileName + '.pdf');
         });
 
         // Initial Load
