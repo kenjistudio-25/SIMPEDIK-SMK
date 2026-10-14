@@ -239,6 +239,18 @@
         .card-search-box i { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: rgba(255,255,255,0.7); }
         @media (max-width: 768px) { .card-search-box input { width: 100%; } }
 
+        /* Tab Kelas (Modal Input Jurnal) */
+        .kelas-tabs { display: flex; gap: 8px; overflow-x: auto; padding-bottom: 10px; margin-bottom: 10px; border-bottom: 1px solid #eee; -webkit-overflow-scrolling: touch; }
+        .kelas-tab { flex: 0 0 auto; display: inline-flex; align-items: center; gap: 6px; padding: 8px 14px; border: 1px solid #ddd; background: #f3f4f6; color: #475569; border-radius: 20px; cursor: pointer; font-size: 0.9rem; font-weight: 600; transition: all 0.2s; }
+        .kelas-tab:hover { background: #e5e7eb; }
+        .kelas-tab.active { background: var(--primary-color); border-color: var(--primary-color); color: white; }
+        .kelas-tab .tab-count { background: rgba(0,0,0,0.12); border-radius: 10px; padding: 1px 8px; font-size: 0.75rem; }
+        .kelas-tab.active .tab-count { background: rgba(255,255,255,0.25); }
+        .kelas-tab.saved { border-color: #10b981; }
+        .kelas-tab.saved i { color: #10b981; }
+        .kelas-tab.active.saved i { color: white; }
+        #jurnalSubmitBtn:disabled { opacity: 0.6; cursor: not-allowed; }
+
         /* Footer */
         .main-footer {
             text-align: center;
@@ -347,6 +359,12 @@
                         <option value="" style="color: #333;">Semua Status</option>
                         <option value="Ya" style="color: #333;">Ya</option>
                         <option value="Tidak" style="color: #333;">Tidak</option>
+                    </select>
+                    <select id="filterBulanJurnal" title="Filter Bulan" style="padding: 8px 10px; border: 1px solid rgba(255,255,255,0.4); border-radius: 6px; font-size: 0.9rem; background: rgba(255,255,255,0.1); color: rgb(15, 15, 15); width: 160px; outline: none; cursor: pointer;">
+                        <option value="" style="color: #333;">Semua Bulan</option>
+                    </select>
+                    <select id="filterKelasJurnal" title="Filter Kelas" style="padding: 8px 10px; border: 1px solid rgba(255,255,255,0.4); border-radius: 6px; font-size: 0.9rem; background: rgba(255,255,255,0.1); color: rgb(15, 15, 15); width: 160px; outline: none; cursor: pointer;">
+                        <option value="" style="color: #333;">Semua Kelas</option>
                     </select>
                 </div>
                 <div class="mobile-vertical-btn" style="display: flex; gap: 10px;">
@@ -464,7 +482,7 @@
     </div>
 
     <!-- Modal Notifikasi Duplikat -->
-    <div id="duplicateModal" class="modal">
+    <div id="duplicateModal" class="modal" style="z-index: 2100;">
         <div class="modal-content" style="max-width: 500px; text-align: center; padding: 30px;">
             <div style="margin-bottom: 20px;">
                 <i class="fas fa-info-circle" style="font-size: 4rem; color: #3b82f6;"></i>
@@ -487,6 +505,7 @@
             <div class="modal-body">
                 <div id="jurnalDateDisplay" style="font-size: 1.2rem; font-weight: bold; color: var(--primary-color); margin-bottom: 20px; text-align: center; border-bottom: 1px solid #eee; padding-bottom: 10px;"></div>
                 <form id="jurnalForm">
+                    <div id="jurnalKelasTabs" class="kelas-tabs"></div>
                     <div class="table-responsive">
                         <table class="custom-table">
                             <thead>
@@ -507,8 +526,8 @@
                         </table>
                     </div>
                     <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary" id="cancelJurnalBtn">Cancel</button>
-                        <button type="submit" class="btn btn-primary">Simpan</button>
+                        <button type="button" class="btn btn-secondary" id="cancelJurnalBtn">Tutup</button>
+                        <button type="submit" class="btn btn-primary" id="jurnalSubmitBtn">Simpan</button>
                     </div>
                 </form>
             </div>
@@ -1321,6 +1340,11 @@
             });
         }
 
+        ['filterBulanJurnal', 'filterKelasJurnal'].forEach(id => {
+            const el = document.getElementById(id);
+            if (el) el.addEventListener('change', () => renderJurnalTable(1));
+        });
+
         // --- Input Jurnal Piket Logic ---
         const inputJurnalBtn = document.getElementById('inputJurnalBtn');
         const jurnalModal = document.getElementById('jurnalModal');
@@ -1342,6 +1366,7 @@
                 jurnalDateDisplay.textContent = `${weekday}, ${day} - ${month} - ${year}`;
 
                 // 2. Load Data dari Petugas Piket Umum Siswa (datapiketsiswa)
+                resetJurnalTabs();
                 jurnalInputTableBody.innerHTML = '<tr><td colspan="8" style="text-align:center;">Memuat data...</td></tr>';
                 jurnalModal.classList.add('active');
 
@@ -1365,6 +1390,7 @@
 
                     data.forEach((item, index) => {
                         const row = document.createElement('tr');
+                        row.dataset.kelas = item.kelas || 'Tanpa Kelas';
                         // Generate ID Jurnal Unik: JRN-[YYYYMMDD]-[NISN]
                         const dateCode = now.toISOString().slice(0,10).replace(/-/g, '');
                         const random3 = Math.floor(100 + Math.random() * 900);
@@ -1384,11 +1410,13 @@
                                 </div>
                             </td>
                             <td>
-                                <button type="button" class="btn btn-danger" style="padding:4px 8px; font-size:0.8rem;" onclick="this.closest('tr').remove()"><i class="fas fa-trash"></i></button>
+                                <button type="button" class="btn btn-danger" style="padding:4px 8px; font-size:0.8rem;" onclick="removeJurnalRow(this)"><i class="fas fa-trash"></i></button>
                             </td>
                         `;
                         jurnalInputTableBody.appendChild(row);
                     });
+
+                    initJurnalKelasTabs();
 
                 } catch (err) {
                     console.error(err);
@@ -1396,6 +1424,88 @@
                 }
             });
         }
+
+        // --- Tab Kelas pada Modal Input Jurnal ---
+        let activeJurnalKelas = '';
+        const savedJurnalKelas = new Set();
+        const sortKelas = (a, b) => a.localeCompare(b, 'id', { numeric: true });
+
+        function getJurnalRows() {
+            return Array.from(jurnalInputTableBody.querySelectorAll('tr[data-kelas]'));
+        }
+
+        function getJurnalKelasList() {
+            return [...new Set(getJurnalRows().map(r => r.dataset.kelas))].sort(sortKelas);
+        }
+
+        function resetJurnalTabs() {
+            activeJurnalKelas = '';
+            savedJurnalKelas.clear();
+            const tabs = document.getElementById('jurnalKelasTabs');
+            if (tabs) tabs.innerHTML = '';
+            updateJurnalSubmitLabel();
+        }
+
+        function initJurnalKelasTabs() {
+            activeJurnalKelas = getJurnalKelasList()[0] || '';
+            renderJurnalKelasTabs();
+        }
+
+        function updateJurnalSubmitLabel() {
+            const btn = document.getElementById('jurnalSubmitBtn');
+            if (!btn) return;
+            if (!activeJurnalKelas) {
+                btn.textContent = 'Simpan';
+                btn.disabled = true;
+            } else if (savedJurnalKelas.has(activeJurnalKelas)) {
+                btn.textContent = `Kelas ${activeJurnalKelas} sudah disimpan`;
+                btn.disabled = true;
+            } else {
+                btn.textContent = `Simpan Kelas ${activeJurnalKelas}`;
+                btn.disabled = false;
+            }
+        }
+
+        function renderJurnalKelasTabs() {
+            const container = document.getElementById('jurnalKelasTabs');
+            const rows = getJurnalRows();
+            const counts = {};
+            rows.forEach(r => { counts[r.dataset.kelas] = (counts[r.dataset.kelas] || 0) + 1; });
+            const kelasList = Object.keys(counts).sort(sortKelas);
+
+            if (kelasList.length === 0) {
+                container.innerHTML = '';
+                jurnalInputTableBody.innerHTML = '<tr><td colspan="8" style="text-align:center;">Tidak ada data petugas piket.</td></tr>';
+                activeJurnalKelas = '';
+                updateJurnalSubmitLabel();
+                return;
+            }
+
+            if (!kelasList.includes(activeJurnalKelas)) activeJurnalKelas = kelasList[0];
+
+            container.innerHTML = '';
+            kelasList.forEach(k => {
+                const btn = document.createElement('button');
+                btn.type = 'button';
+                btn.className = 'kelas-tab' + (k === activeJurnalKelas ? ' active' : '') + (savedJurnalKelas.has(k) ? ' saved' : '');
+                btn.innerHTML = `${savedJurnalKelas.has(k) ? '<i class="fas fa-check-circle"></i>' : ''}<span></span><span class="tab-count">${counts[k]}</span>`;
+                btn.querySelector('span').textContent = k;
+                btn.addEventListener('click', () => {
+                    activeJurnalKelas = k;
+                    renderJurnalKelasTabs();
+                });
+                container.appendChild(btn);
+            });
+
+            // Tampilkan hanya baris milik kelas yang aktif
+            rows.forEach(r => { r.style.display = r.dataset.kelas === activeJurnalKelas ? '' : 'none'; });
+            updateJurnalSubmitLabel();
+        }
+
+        window.removeJurnalRow = function(btn) {
+            btn.closest('tr').remove();
+            renderJurnalKelasTabs();
+        };
 
         // Close Modal
         function closeJurnalModalFunc() {
@@ -1414,7 +1524,8 @@
                 submitBtn.disabled = true;
 
                 try {
-                    const rows = jurnalInputTableBody.querySelectorAll('tr');
+                    // Simpan hanya data dari tab kelas yang sedang aktif
+                    const rows = getJurnalRows().filter(r => r.dataset.kelas === activeJurnalKelas);
                     const inserts = [];
                     const now = new Date();
                     const tanggal = now.toISOString().split('T')[0]; // YYYY-MM-DD
@@ -1473,8 +1584,19 @@
                         if (insertError) throw insertError;
                     }
 
-                    closeJurnalModalFunc();
                     loadJurnalData(); // Refresh tabel jurnal
+
+                    // Tandai kelas ini selesai, lalu pindah ke kelas berikutnya yang belum disimpan
+                    savedJurnalKelas.add(activeJurnalKelas);
+                    const kelasList = getJurnalKelasList();
+                    const belumDisimpan = kelasList.filter(k => !savedJurnalKelas.has(k));
+                    if (belumDisimpan.length === 0) {
+                        closeJurnalModalFunc();
+                    } else {
+                        const idx = kelasList.indexOf(activeJurnalKelas);
+                        activeJurnalKelas = kelasList.slice(idx + 1).find(k => !savedJurnalKelas.has(k)) || belumDisimpan[0];
+                        renderJurnalKelasTabs();
+                    }
 
                     // Tampilkan Notifikasi
                     if (duplicates.length > 0) {
@@ -1503,8 +1625,7 @@
                     console.error(err);
                     alert('Gagal menyimpan: ' + err.message);
                 } finally {
-                    submitBtn.textContent = originalText;
-                    submitBtn.disabled = false;
+                    updateJurnalSubmitLabel();
                 }
             });
         }
@@ -1531,6 +1652,7 @@
                 if (error) throw error;
 
                 jurnalDataList = data || [];
+                populateJurnalFilters();
                 renderJurnalTable(1);
 
             } catch (err) {
@@ -1539,38 +1661,97 @@
             }
         }
 
-        function renderJurnalTable(page = 1) {
-            currentJurnalPage = page;
-            const tableBody = document.getElementById('jurnalPiketTableBody');
-            const searchFilter = document.getElementById('searchJurnalInput') ? document.getElementById('searchJurnalInput').value.toLowerCase() : '';
-            const statusFilter = document.getElementById('filterStatusPiket') ? document.getElementById('filterStatusPiket').value : '';
+        // --- Filter Jurnal: Bulan, Kelas, Status, Pencarian (dipakai tabel & export PDF) ---
+        const NAMA_BULAN_JURNAL = ['Januari','Februari','Maret','April','Mei','Juni','Juli','Agustus','September','Oktober','November','Desember'];
 
-            const now = new Date();
-            const hariIni = now.toLocaleDateString('id-ID', { weekday: 'long' }).toUpperCase();
+        function jurnalMonthKey(tanggal) {
+            // "YYYY-MM" langsung dari string tanggal (aman dari masalah timezone)
+            return tanggal ? String(tanggal).substring(0, 7) : '';
+        }
 
-            // Filter data berdasarkan pencarian
-            const filteredData = jurnalDataList.filter(item => {
-                // Ambil nama hari dari tanggal untuk pencarian
+        function jurnalMonthLabel(key) {
+            const [y, m] = key.split('-');
+            return `${NAMA_BULAN_JURNAL[parseInt(m, 10) - 1] || m} ${y}`;
+        }
+
+        function getJurnalFilterState() {
+            const val = id => { const el = document.getElementById(id); return el ? el.value : ''; };
+            return {
+                search: val('searchJurnalInput').trim().toLowerCase(),
+                status: val('filterStatusPiket'),
+                bulan: val('filterBulanJurnal'),
+                kelas: val('filterKelasJurnal')
+            };
+        }
+
+        function populateJurnalFilters() {
+            const selBulan = document.getElementById('filterBulanJurnal');
+            const selKelas = document.getElementById('filterKelasJurnal');
+            if (!selBulan || !selKelas) return;
+            const prevBulan = selBulan.value;
+            const prevKelas = selKelas.value;
+
+            const bulanSet = new Set();
+            const kelasSet = new Set();
+            jurnalDataList.forEach(item => {
+                const key = jurnalMonthKey(item.tanggal);
+                if (key) bulanSet.add(key);
+                if (item.kelas) kelasSet.add(item.kelas);
+            });
+
+            const bulanList = [...bulanSet].sort().reverse(); // terbaru di atas
+            const kelasList = [...kelasSet].sort((a, b) => a.localeCompare(b, 'id', { numeric: true }));
+
+            selBulan.innerHTML = '<option value="" style="color: #333;">Semua Bulan</option>' +
+                bulanList.map(k => `<option value="${k}" style="color: #333;">${jurnalMonthLabel(k)}</option>`).join('');
+            selKelas.innerHTML = '<option value="" style="color: #333;">Semua Kelas</option>' +
+                kelasList.map(k => `<option value="${k}" style="color: #333;">${k}</option>`).join('');
+
+            // Pertahankan pilihan sebelumnya jika masih tersedia
+            if (bulanSet.has(prevBulan)) selBulan.value = prevBulan;
+            if (kelasSet.has(prevKelas)) selKelas.value = prevKelas;
+        }
+
+        // defaultToday: true  -> untuk tabel: jika tidak ada pencarian/bulan/kelas, tampilkan data hari ini saja
+        // defaultToday: false -> untuk export: tanpa filter = semua data
+        function filterJurnalData(list, { defaultToday = false } = {}) {
+            const { search, status, bulan, kelas } = getJurnalFilterState();
+            const hariIni = new Date().toLocaleDateString('id-ID', { weekday: 'long' }).toUpperCase();
+
+            return list.filter(item => {
+                if (bulan && jurnalMonthKey(item.tanggal) !== bulan) return false;
+                if (kelas && item.kelas !== kelas) return false;
+                if (status && item.status !== status) return false;
+
                 let itemDay = '';
                 if (item.tanggal) {
                     itemDay = new Date(item.tanggal).toLocaleDateString('id-ID', { weekday: 'long' });
                 }
 
-                const text = (
-                    (item.nama_siswa || '') + ' ' + 
-                    (item.kelas || '') + ' ' + 
-                    (item.area || '') + ' ' + 
-                    (item.nisn || '') + ' ' +
-                    (item.id_petugas || '') + ' ' +
-                    itemDay
-                ).toLowerCase();
-
-                // Jika ada pencarian, filter berdasarkan text. Jika tidak, tampilkan hanya data hari ini (berdasarkan ID Petugas atau Tanggal)
-                const matchesSearch = searchFilter ? text.includes(searchFilter) : ((item.id_petugas && item.id_petugas.toUpperCase().includes(hariIni)) || (itemDay && itemDay.toUpperCase() === hariIni));
-                const matchesStatus = statusFilter ? item.status === statusFilter : true;
-
-                return matchesSearch && matchesStatus;
+                if (search) {
+                    const text = (
+                        (item.nama_siswa || '') + ' ' +
+                        (item.kelas || '') + ' ' +
+                        (item.area || '') + ' ' +
+                        (item.nisn || '') + ' ' +
+                        (item.id_petugas || '') + ' ' +
+                        itemDay
+                    ).toLowerCase();
+                    if (!text.includes(search)) return false;
+                } else if (defaultToday && !bulan && !kelas) {
+                    const isToday = (item.id_petugas && item.id_petugas.toUpperCase().includes(hariIni)) ||
+                                    (itemDay && itemDay.toUpperCase() === hariIni);
+                    if (!isToday) return false;
+                }
+                return true;
             });
+        }
+
+        function renderJurnalTable(page = 1) {
+            currentJurnalPage = page;
+            const tableBody = document.getElementById('jurnalPiketTableBody');
+            // Filter data (pencarian + status + bulan + kelas)
+            const filteredData = filterJurnalData(jurnalDataList, { defaultToday: true });
 
             // Hitung Pagination
             const totalPages = Math.ceil(filteredData.length / jurnalPerPage);
@@ -1662,35 +1843,9 @@
         if (exportJurnalBtn) {
             exportJurnalBtn.addEventListener('click', async () => {
                 try {
-                    // Gunakan data lokal yang sudah dimuat (jurnalDataList)
-                    let data = [...jurnalDataList];
-
-                    // Cek filter pencarian
-                    const searchInput = document.getElementById('searchJurnalInput');
-                    const searchFilter = searchInput ? searchInput.value.trim().toLowerCase() : '';
-                    const statusInput = document.getElementById('filterStatusPiket');
-                    const statusFilter = statusInput ? statusInput.value : '';
-
-                    if (searchFilter || statusFilter) {
-                        data = data.filter(item => {
-                            let itemDay = '';
-                            if (item.tanggal) {
-                                itemDay = new Date(item.tanggal).toLocaleDateString('id-ID', { weekday: 'long' });
-                            }
-                            const text = (
-                                (item.nama_siswa || '') + ' ' + 
-                                (item.kelas || '') + ' ' + 
-                                (item.area || '') + ' ' + 
-                                (item.nisn || '') + ' ' +
-                                (item.id_petugas || '') + ' ' +
-                                itemDay
-                            ).toLowerCase();
-                            
-                            const matchesSearch = searchFilter ? text.includes(searchFilter) : true;
-                            const matchesStatus = statusFilter ? item.status === statusFilter : true;
-                            return matchesSearch && matchesStatus;
-                        });
-                    }
+                    // Data export = data terfilter (Bulan/Kelas/Status/Pencarian), atau semua data jika tidak ada filter
+                    const filterState = getJurnalFilterState();
+                    let data = filterJurnalData(jurnalDataList, { defaultToday: false });
 
                     // Sortir berdasarkan nama siswa untuk tabel rekap (sesuai format sebelumnya)
                     data.sort((a, b) => (a.nama_siswa || '').localeCompare(b.nama_siswa || ''));
@@ -1739,12 +1894,14 @@
                     doc.text(schoolName, pageWidth / 2, yPos, { align: 'center' });
                     yPos += 8;
                     
-                    // Keterangan Bulan
-                    const now = new Date();
-                    const monthName = now.toLocaleDateString('id-ID', { month: 'long' });
+                    // Keterangan filter (Bulan / Kelas / Status)
+                    const bulanText = filterState.bulan ? jurnalMonthLabel(filterState.bulan) : 'Semua Bulan';
+                    let keterangan = `Bulan : ${bulanText}`;
+                    if (filterState.kelas) keterangan += `  |  Kelas : ${filterState.kelas}`;
+                    if (filterState.status) keterangan += `  |  Status : ${filterState.status}`;
                     doc.setFontSize(12);
                     doc.setTextColor(0);
-                    doc.text(`Bulan : ${monthName}`, pageWidth / 2, yPos, { align: 'center' });
+                    doc.text(keterangan, pageWidth / 2, yPos, { align: 'center' });
                     yPos += 5;
 
                     const today = new Date();
@@ -1857,7 +2014,10 @@
                     doc.text(g3 ? g3.name : "( .............................. )", colWidth * 2.5, finalY + 25, { align: 'center' });
                     if (g3 && g3.nip) doc.text(`NIP. ${g3.nip}`, colWidth * 2.5, finalY + 30, { align: 'center' });
 
-                    doc.save(`Laporan_Lengkap_Piket_Siswa_${monthName}.pdf`);
+                    let fileName = 'Laporan_Lengkap_Piket_Siswa';
+                    if (filterState.bulan) fileName += '_' + jurnalMonthLabel(filterState.bulan).replace(/\s+/g, '_');
+                    if (filterState.kelas) fileName += '_' + filterState.kelas.replace(/[^\w-]+/g, '_');
+                    doc.save(fileName + '.pdf');
                 } catch (err) {
                     console.error('Export error:', err);
                     alert('Gagal export PDF: ' + err.message);
