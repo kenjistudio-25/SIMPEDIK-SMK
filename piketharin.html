@@ -2,7 +2,7 @@
 <html lang="id">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
     <title>Piket Harian - SMKN 1 Mentok</title>
     <!-- Font Awesome untuk Icon -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -14,275 +14,215 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.31/jspdf.plugin.autotable.min.js"></script>
     <style>
-        :root {
-            --primary-color: #667eea;
-            --secondary-color: #764ba2;
-            --sidebar-bg: #2c3e50;
-            --sidebar-text: #ecf0f1;
-            --sidebar-hover: #34495e;
-            --header-height: 60px;
-            --sidebar-width: 260px;
-            --bg-light: #f4f6f9;
-            --navbar-bg: #dc2626; /* Warna Merah untuk Navbar */
-        }
+:root{
+  --font:-apple-system,BlinkMacSystemFont,"SF Pro Text","Segoe UI",Inter,Roboto,Helvetica,Arial,sans-serif;
+  --text:#1d1d1f;--muted:#6e6e73;--accent:#0a7aff;--green:#28c840;--orange:#ff9f0a;--red:#ff453a;
+  --glass:rgba(255,255,255,.72);--card:rgba(255,255,255,.88);--line:rgba(0,0,0,.1);--bar:rgba(255,255,255,.6);--track:rgba(120,120,128,.16);
+  --red-text:#d70015;--green-text:#1fa23c;--orange-text:#b86e00;
+  --wall:linear-gradient(135deg,#9cbcff 0%,#c4b0fb 40%,#f9c4de 72%,#fde3bd 100%);
+  --shadow:0 14px 40px rgba(30,30,80,.2),0 0 0 .5px rgba(0,0,0,.14);
+  --primary-color:var(--accent);
+  color-scheme:light dark;
+}
+@media (prefers-color-scheme:dark){:root{--text:#f5f5f7;--muted:#a1a1a6;--accent:#2f8bff;--glass:rgba(40,40,46,.7);--card:rgba(44,44,50,.9);
+  --line:rgba(255,255,255,.12);--bar:rgba(20,20,26,.55);--track:rgba(255,255,255,.14);
+  --red-text:#ff6961;--green-text:#5be37a;--orange-text:#ffb454;
+  --wall:linear-gradient(135deg,#1e2a5a 0%,#3b2a6e 40%,#6b2d5c 75%,#7a4a3a 100%);--shadow:0 14px 40px rgba(0,0,0,.5),0 0 0 .5px rgba(255,255,255,.14)}}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{overflow-x:clip;max-width:100%}
+.box,.panel,.table-responsive,.filters,.btn-row,.guru{max-width:100%}
+body{font-family:var(--font);color:var(--text);background:var(--wall) fixed;line-height:1.5;-webkit-font-smoothing:antialiased;min-height:100vh;padding-bottom:calc(96px + env(safe-area-inset-bottom))}
+a{color:inherit;text-decoration:none}
+button{font:inherit;color:inherit;cursor:pointer;border:0;background:none}
+input,select{font:inherit;color:var(--text)}
+:focus-visible{outline:3px solid var(--accent);outline-offset:2px;border-radius:10px}
 
-        * {
-            box-sizing: border-box;
-            margin: 0;
-            padding: 0;
-        }
+/* Navbar */
+.navbar{position:sticky;top:0;z-index:20;display:flex;align-items:center;gap:12px;padding:8px 20px;padding-top:calc(8px + env(safe-area-inset-top));
+  background:var(--bar);backdrop-filter:saturate(180%) blur(24px);-webkit-backdrop-filter:saturate(180%) blur(24px);border-bottom:.5px solid var(--line)}
+.navbar-brand{display:flex;align-items:center;gap:10px;min-width:0}
+.navbar-brand img{flex:none;width:36px;height:36px;border-radius:10px;object-fit:contain;background:#fff;box-shadow:0 2px 6px rgba(0,0,0,.22)}
+.sch-fallback{flex:none;width:36px;height:36px;padding:8px;border-radius:10px;color:#fff;background:linear-gradient(160deg,#4da3ff,#0a5fe0);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.45),0 2px 6px rgba(0,0,0,.22)}
+.navbar-brand img[style*="display: block"]+.sch-fallback{display:none}
+.navbar-brand span{display:block;min-width:0;font-weight:700;font-size:14px;letter-spacing:-.01em;line-height:1.2;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.sp{flex:1}
 
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background-color: var(--bg-light);
-            display: flex;
-            flex-direction: column;
-            height: 100vh;
-            overflow: hidden;
-        }
+/* Layout */
+.main-content{padding:22px min(150px,12vw)}
+.head{display:flex;flex-wrap:wrap;align-items:end;justify-content:space-between;gap:10px;margin-bottom:18px}
+h1{font-size:clamp(26px,4.5vw,36px);letter-spacing:-.025em;line-height:1.1}
+.head p{color:var(--muted);font-size:14px;margin-top:4px}
+.chip{display:inline-flex;align-items:center;gap:8px;font-size:13px;font-weight:600;padding:6px 14px;border-radius:99px;background:var(--glass);box-shadow:0 0 0 .5px var(--line);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px)}
+.chip i{color:var(--accent)}
+.panel{background:var(--glass);backdrop-filter:saturate(180%) blur(30px);-webkit-backdrop-filter:saturate(180%) blur(30px);border-radius:16px;box-shadow:var(--shadow)}
+.box{padding:20px;margin-bottom:16px}
+.box-head{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:12px;margin-bottom:16px}
+.ttl{display:flex;align-items:center;gap:12px;min-width:0}
+.ttl h2{font-size:18px;letter-spacing:-.01em}
+.ic{flex:none;width:34px;height:34px;border-radius:9px;display:grid;place-items:center;color:#fff;font-size:15px;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.35),0 2px 6px rgba(0,0,0,.18)}
+.ic.blue{background:linear-gradient(160deg,#4da3ff,#0a5fe0)}
+.ic.green{background:linear-gradient(160deg,#5be37a,#1fa23c)}
+.ic.orange{background:linear-gradient(160deg,#ffb454,#f0780a)}
+.badge{font-size:13px;font-weight:600;padding:5px 14px;border-radius:99px;color:var(--accent);background:rgba(10,122,255,.14)}
+.btn-row{display:flex;flex-wrap:wrap;gap:8px}
+.filters{display:flex;flex-wrap:wrap;gap:10px;margin-bottom:14px}
 
-        /* --- Navbar (Custom Red) --- */
-        .navbar {
-            height: var(--header-height);
-            background-color: var(--navbar-bg); /* Menggunakan warna merah */
-            display: flex;
-            align-items: center;
-            padding: 0 1rem;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-            z-index: 1002;
-            position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-        }
+/* Kartu guru piket */
+.guru-grid{display:flex;flex-wrap:wrap;gap:12px}
+.guru{flex:1 1 210px;min-width:0;display:flex;align-items:center;gap:12px;padding:12px 14px;border-radius:14px;background:var(--card);box-shadow:0 0 0 .5px var(--line)}
+.guru .av{flex:none;width:44px;height:44px;border-radius:50%;display:grid;place-items:center;overflow:hidden;color:#fff;background:var(--c,#0a7aff);font-size:17px;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.4),0 2px 6px rgba(0,0,0,.18)}
+.guru .av img{width:100%;height:100%;object-fit:cover}
+.guru small{display:block;font-size:12px;color:var(--muted);line-height:1.3}
+.guru b{display:block;overflow-wrap:anywhere;font-weight:600;font-size:14.5px;line-height:1.3}
+.note{flex:1 1 100%;text-align:center;color:var(--muted);padding:8px}
+.note.err{color:var(--red-text)}
+.denied{flex:1 1 100%;text-align:center;padding:22px 12px}
+.denied i{font-size:2.2rem;color:var(--orange);margin-bottom:8px}
+.denied h3{font-size:18px;margin-bottom:4px}
+.denied p{color:var(--muted);margin-bottom:16px}
 
-        .navbar-brand {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            text-decoration: none;
-            color: white;
-        }
+/* Tombol */
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;padding:7px 14px;border-radius:9px;font-size:14px;font-weight:600;line-height:1.3;color:#fff;
+  background:var(--track);transition:filter .15s,transform .15s,background .15s}
+.btn:hover{filter:brightness(1.06)}
+.btn:active{transform:scale(.97)}
+.btn:disabled{opacity:.5;cursor:not-allowed;transform:none}
+.btn-primary{background:var(--accent);box-shadow:inset 0 1px 0 rgba(255,255,255,.3),0 1px 3px rgba(10,98,224,.35)}
+.btn-danger{background:rgba(255,69,58,.15);color:var(--red-text)}
+.btn-warning{background:rgba(255,159,10,.18);color:var(--orange-text)}
+.btn-secondary{background:var(--track);color:var(--text)}
+.btn-danger:hover,.btn-warning:hover,.btn-secondary:hover{filter:none;background-image:linear-gradient(rgba(120,120,128,.12),rgba(120,120,128,.12))}
 
-        .navbar-brand img {
-            height: 40px;
-            width: auto;
-            background-color: white; /* Background putih untuk logo agar terlihat jelas */
-            border-radius: 50%;
-            padding: 2px;
-        }
+/* Tabel */
+.table-responsive{overflow-x:auto;border-radius:12px;background:var(--card);box-shadow:0 0 0 .5px var(--line)}
+.custom-table{width:100%;border-collapse:collapse;font-size:14px}
+.custom-table th{padding:10px 14px;text-align:left;font-size:12px;font-weight:600;color:var(--muted);background:var(--track);white-space:nowrap}
+.custom-table td{padding:10px 14px;text-align:left;border-top:.5px solid var(--line)}
+.custom-table tbody tr:nth-child(even){background:rgba(120,120,128,.07)}
+.custom-table tbody tr:hover{background:rgba(10,122,255,.09)}
+.custom-table td.cell-note{text-align:center;padding:22px;color:var(--muted)}
+.custom-table td.cell-note.err{color:var(--red-text)}
+.custom-table input[type=text]{color:inherit}
+.custom-table input[type=radio]{accent-color:var(--accent)}
+.st{display:inline-block;font-size:12px;font-weight:600;padding:2px 10px;border-radius:99px}
+.st.ya{color:var(--green-text);background:rgba(40,200,64,.17)}
+.st.tidak{color:var(--red-text);background:rgba(255,69,58,.15)}
+.ok{color:var(--green-text);font-weight:700}
+.bad{color:var(--red-text);font-weight:700}
 
-        .navbar-brand span {
-            font-weight: 700;
-            font-size: 1.1rem;
-            color: white; /* Teks putih */
-        }
+/* Kolom pencarian & filter */
+.card-search-box{position:relative}
+.card-search-box input{width:230px;padding:8px 12px 8px 34px;border:0;border-radius:10px;font-size:14px;background:var(--track);box-shadow:inset 0 0 0 .5px var(--line)}
+.card-search-box input::placeholder{color:var(--muted)}
+.card-search-box i{position:absolute;left:12px;top:50%;transform:translateY(-50%);color:var(--muted);font-size:13px}
+.filters select{padding:8px 12px;border:0;border-radius:10px;font-size:14px;background:var(--track);box-shadow:inset 0 0 0 .5px var(--line);cursor:pointer;min-width:150px}
+#jurnalPagination{display:flex;justify-content:center;align-items:center;gap:12px;margin-top:16px}
+#jurnalPagination span{font-size:13px;color:var(--muted)}
 
-        /* Tombol Kembali Ke Dashboard */
-        .btn-back-dashboard {
-            margin-left: auto;
-            background-color: transparent;
-            border: 1px solid white;
-            color: white;
-            padding: 8px 15px;
-            border-radius: 5px;
-            text-decoration: none;
-            font-weight: 600;
-            font-size: 0.9rem;
-            transition: all 0.3s;
-        }
-        .btn-back-dashboard:hover {
-            background-color: white;
-            color: var(--navbar-bg);
-        }
+/* Jendela modal */
+.modal{display:none;position:fixed;inset:0;z-index:2000;align-items:center;justify-content:center;padding:16px;
+  background:rgba(0,0,0,.35);backdrop-filter:blur(3px);-webkit-backdrop-filter:blur(3px)}
+.modal.active{display:flex}
+.modal-content{width:100%;max-width:500px;max-height:90vh;overflow-y:auto;padding:22px;border-radius:18px;color:var(--text);
+  background:var(--card);backdrop-filter:saturate(200%) blur(30px);-webkit-backdrop-filter:saturate(200%) blur(30px);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.55),0 24px 60px rgba(20,20,60,.4),0 0 0 .5px var(--line);animation:pop .3s cubic-bezier(.2,.85,.25,1)}
+@keyframes pop{from{transform:scale(.95) translateY(10px);opacity:0}to{transform:none;opacity:1}}
+.modal-header{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:18px;padding-bottom:12px;border-bottom:.5px solid var(--line)}
+.modal-header h3{font-size:18px;letter-spacing:-.01em}
+.close-modal{flex:none;width:30px;height:30px;border-radius:50%;display:grid;place-items:center;font-size:20px;line-height:1;cursor:pointer;
+  color:var(--muted);background:rgba(120,120,128,.2);transition:background .15s,transform .15s}
+.close-modal:hover{background:rgba(120,120,128,.34);color:var(--text)}
+.close-modal:active{transform:scale(.92)}
+.modal-footer{display:flex;justify-content:flex-end;gap:10px;margin-top:22px;padding-top:14px}
+.jdate{font-size:1.05rem;font-weight:700;color:var(--accent);margin-bottom:16px;text-align:center;padding-bottom:10px;border-bottom:.5px solid var(--line)}
 
-        /* --- Main Content --- */
-        .main-content {
-            margin-top: var(--header-height);
-            margin-left: 0;
-            padding: 2rem;
-            flex: 1;
-            overflow-y: auto;
-            transition: margin-left 0.3s ease;
-        }
+.form-group{margin-bottom:14px}
+.form-group label{display:block;margin-bottom:6px;color:var(--muted);font-size:13px;font-weight:500}
+.form-group input,.form-group select{width:100%;padding:9px 12px;border:0;border-radius:10px;font-size:14px;background:var(--track);box-shadow:inset 0 0 0 .5px var(--line)}
+.form-group input[readonly]{opacity:.65;cursor:not-allowed}
 
-        .dashboard-card {
-            background: white;
-            padding: 20px;
-            border-radius: 8px;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
-            margin-bottom: 20px;
-        }
+.searchable-dropdown{position:relative}
+.dropdown-options{position:absolute;top:calc(100% + 6px);left:0;right:0;z-index:10;display:none;max-height:200px;overflow-y:auto;padding:5px;border-radius:12px;
+  background:var(--card);backdrop-filter:blur(30px);-webkit-backdrop-filter:blur(30px);box-shadow:var(--shadow)}
+.dropdown-options.show{display:block}
+.dropdown-option{padding:8px 10px;border-radius:7px;cursor:pointer;font-size:14px}
+.dropdown-option:hover{background:var(--accent);color:#fff}
+.no-results{padding:10px;color:var(--muted);font-size:13px;text-align:center}
 
-        /* Stats Grid */
-        .stats-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
-            gap: 20px;
-            margin-bottom: 20px;
-        }
+.kelas-tabs{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:16px}
+.kelas-tabs:empty{display:none}
+.kelas-tab{flex:0 0 auto;display:inline-flex;align-items:center;gap:6px;padding:7px 14px;border-radius:99px;font-size:13px;font-weight:600;cursor:pointer;
+  background:var(--track);transition:background .15s}
+.kelas-tab:hover{background:rgba(120,120,128,.28)}
+.kelas-tab .tab-count{font-size:11px;padding:1px 8px;border-radius:99px;background:rgba(120,120,128,.25)}
+.kelas-tab.saved i{color:var(--green-text)}
+.kelas-tab.active{background:var(--accent);color:#fff}
+.kelas-tab.active .tab-count{background:rgba(255,255,255,.28)}
+.kelas-tab.active.saved i{color:#fff}
+#jurnalSubmitBtn:disabled{opacity:.5;cursor:not-allowed}
+.col-hide{display:none}
+.status-opts{display:flex;flex-wrap:nowrap;flex-direction:row;gap:14px}
+.status-opts label{display:flex;align-items:center;gap:5px;cursor:pointer;white-space:nowrap}
+#jurnalModal .table-responsive{overflow-x:visible}
+#jurnalModal .custom-table th,#jurnalModal .custom-table td{white-space:normal;overflow-wrap:break-word}
+#jurnalModal .custom-table th:nth-child(2),#jurnalModal .custom-table td:nth-child(2){width:1%}
+#jurnalModal .custom-table td:nth-child(2){white-space:nowrap}
+#jurnalModal .custom-table th:nth-child(4),#jurnalModal .custom-table td:nth-child(4){width:1%;text-align:center}
 
-        .stat-card {
-            background: white;
-            padding: 20px;
-            border-radius: 8px;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-        }
+.hari-tabs{display:flex;gap:2px;padding:3px;margin-bottom:12px;border-radius:11px;background:var(--track)}
+.hari-tabs:empty{display:none}
+.hari-tab{flex:1 1 0;min-width:0;padding:7px 4px;border-radius:8px;font-size:13px;font-weight:600;text-align:center;color:var(--muted);transition:background .15s,color .15s,box-shadow .15s}
+.hari-tab:hover{color:var(--text)}
+.hari-tab.active{color:var(--text);background:var(--card);box-shadow:0 1px 3px rgba(0,0,0,.18),0 0 0 .5px var(--line)}
+#allPiketKelasTabs .kelas-tab{flex:1 1 auto;justify-content:center}
+#allPiketContainer .table-responsive{overflow-x:visible}
+#allPiketContainer .custom-table{table-layout:auto}
+#allPiketContainer .custom-table th,#allPiketContainer .custom-table td{white-space:normal;overflow-wrap:break-word}
+#allPiketContainer .custom-table th:first-child,#allPiketContainer .custom-table td:first-child{width:44px}
+#allPiketContainer .custom-table td:nth-child(3){white-space:nowrap}
+.dup-icon{font-size:3.4rem;color:var(--accent);margin-bottom:14px}
+.dup-msg{text-align:left;max-height:200px;overflow-y:auto;margin-bottom:22px;padding:14px;border-radius:12px;line-height:1.5;color:var(--muted);background:var(--track)}
 
-        .stat-info h3 { font-size: 2rem; margin-bottom: 5px; color: #333; }
-        .stat-info p { color: #777; font-size: 0.9rem; }
-        .stat-icon { font-size: 2.5rem; opacity: 0.2; }
+.main-footer{text-align:center;padding:16px;margin-top:20px;color:var(--muted);font-size:13px}
 
-        /* Table Styles */
-        .table-responsive { overflow-x: auto; }
-        .custom-table { width: 100%; border-collapse: collapse; margin-top: 10px; }
-        .custom-table th, .custom-table td { padding: 12px 15px; text-align: left; border-bottom: 1px solid #eee; }
-        .custom-table th { background-color: #f8f9fa; color: #555; font-weight: 600; }
-        .custom-table tr:hover { background-color: #f9f9f9; }
-        
-        /* Button Styles */
-        .btn { padding: 8px 15px; border: none; border-radius: 5px; cursor: pointer; font-size: 0.9rem; color: white; display: inline-flex; align-items: center; gap: 5px; text-decoration: none; transition: opacity 0.2s; }
-        .btn:hover { opacity: 0.9; }
-        .btn-primary { background-color: var(--primary-color); }
-        .btn-danger { background-color: #ef4444; }
-        .btn-warning { background-color: #f59e0b; }
+/* Dock */
+.dock{position:fixed!important;left:0;right:0;bottom:0;z-index:30;display:flex;justify-content:center;padding-bottom:env(safe-area-inset-bottom);background:rgba(255,255,255,.82);backdrop-filter:saturate(180%) blur(30px);-webkit-backdrop-filter:saturate(180%) blur(30px);border-top:.5px solid rgba(0,0,0,.1);box-shadow:0 -4px 20px rgba(30,30,80,.12);transform:translateZ(0);-webkit-transform:translateZ(0);will-change:transform}
+@media (prefers-color-scheme:dark){.dock{background:rgba(30,30,36,.8);border-top-color:rgba(255,255,255,.12)}}
+.dock nav{width:100%;display:flex;justify-content:center;gap:6px;padding:8px}
+.d{display:flex;flex-direction:column;align-items:center;gap:3px;min-width:84px;padding:8px 14px;border-radius:16px;font-size:12px;font-weight:600;transition:background .15s,transform .15s}
+.d:hover{background:var(--track);transform:translateY(-3px)}
+.d{text-align:center;line-height:1.2}
+.d:disabled{opacity:.5;cursor:not-allowed}
+.d:disabled:hover{background:none;transform:none}
+.d .ic{width:40px;height:40px;border-radius:11px;font-size:18px}
+.d .ic svg{width:21px;height:21px}
 
-        /* Modal Styles */
-        .modal { display: none; position: fixed; z-index: 2000; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.6); backdrop-filter: blur(4px); align-items: center; justify-content: center; }
-        .modal.active { display: flex; }
-        .modal-content { background-color: white; width: 90%; max-width: 500px; padding: 25px; border-radius: 10px; box-shadow: 0 10px 25px rgba(0,0,0,0.5); animation: slideDown 0.3s ease; max-height: 90vh; overflow-y: auto; }
-        @keyframes slideDown { from { transform: translateY(-50px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
-        .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; border-bottom: 1px solid #eee; padding-bottom: 10px; }
-        .modal-header h3 { margin: 0; color: #333; font-size: 1.2rem; }
-        .close-modal { font-size: 1.5rem; cursor: pointer; color: #888; transition: color 0.2s; }
-        .close-modal:hover { color: #ef4444; }
-        
-        .form-group { margin-bottom: 15px; }
-        .form-group label { display: block; margin-bottom: 8px; color: #666; font-size: 0.9rem; font-weight: 500; }
-        .form-group input, .form-group select { width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 6px; font-size: 0.95rem; transition: border-color 0.3s; }
-        .form-group input:focus, .form-group select:focus { outline: none; border-color: var(--primary-color); box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1); }
-        .form-group input[readonly] { background-color: #f3f4f6; cursor: not-allowed; }
+@media (max-width:768px){
+  .mobile-vertical-btn{flex-direction:column;width:100%}
+  .mobile-vertical-btn .btn{width:100%}
+  .card-search-box,.card-search-box input,.filters select{width:100%}
+  .filters .card-search-box{flex:1 1 100%}
+}
+@media (max-width:520px){#jurnalPiketTable{font-size:11px}#jurnalPiketTable th{font-size:10px;padding:8px 6px}#jurnalPiketTable td{padding:8px 6px}#jurnalPiketTable .st{font-size:10px;padding:2px 7px}#jurnalPiketTable .btn{font-size:11px}#jurnalModal .custom-table{font-size:12px}#jurnalModal .custom-table th{font-size:11px}#jurnalModal .custom-table th,#jurnalModal .custom-table td{padding:8px 5px}#jurnalModal .status-opts{gap:8px}#jurnalModal .status-opts label{gap:3px}#jurnalModal .btn-danger{padding:4px 7px!important}#allPiketContainer .custom-table th,#allPiketContainer .custom-table td{padding:9px 8px}.hari-tab{font-size:12px;padding:7px 2px}.dock nav{gap:2px;padding:6px 6px}.d{flex:1 1 0;min-width:0;padding:6px 0;font-size:11px}.d .ic{width:38px;height:38px;font-size:16px}.main-content{padding:16px 10px}.navbar{padding-left:10px;padding-right:10px}.modal{padding:10px}.modal-content{max-width:100%!important;width:100%!important}.box{padding:16px 14px}.modal-content{padding:18px 16px}}
+@media (max-width:380px){.d{font-size:10px;letter-spacing:-.01em}.d .ic{width:36px;height:36px}.dock nav{gap:0;padding:6px 4px}}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
 
-        .modal-footer { display: flex; justify-content: flex-end; gap: 10px; margin-top: 25px; }
-        .btn-secondary { background-color: #e2e8f0; color: #475569; }
-        .btn-secondary:hover { background-color: #cbd5e1; }
-
-        /* Custom Searchable Dropdown */
-        .searchable-dropdown { position: relative; }
-        .dropdown-options {
-            position: absolute; top: 100%; left: 0; right: 0;
-            background: white; border: 1px solid #ddd;
-            border-radius: 0 0 6px 6px; max-height: 200px;
-            overflow-y: auto; z-index: 10; display: none;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-        }
-        .dropdown-options.show { display: block; }
-        .dropdown-option { padding: 10px; cursor: pointer; border-bottom: 1px solid #f1f1f1; font-size: 0.95rem; color: #333; }
-        .dropdown-option:hover { background-color: #f3f4f6; color: var(--primary-color); }
-        .dropdown-option:last-child { border-bottom: none; }
-        .no-results { padding: 10px; color: #888; font-size: 0.9rem; text-align: center; }
-
-        /* Blue Card Theme */
-        .card-blue {
-            background: #1e40af;
-            color: white;
-            border: 1px solid #000000;
-        }
-        .card-blue .custom-table th {
-            background-color: #172554;
-            color: #e0e7ff;
-            border-bottom: 1px solid #3b82f6;
-        }
-        .card-blue .custom-table td {
-            border-bottom: 1px solid #1e3a8a;
-        }
-        .card-blue .custom-table tr:hover {
-            background-color: #1e3a8a;
-        }
-
-        /* Green Card Theme */
-        .card-green {
-            background: #78e4c0;
-            color: rgb(20, 20, 20);
-            border: 1px solid #000805;
-        }
-        .card-green .custom-table th {
-            background-color: #064e3b;
-            color: #ecd68e;
-            border-bottom: 1px solid #34d399;
-        }
-        .card-green .custom-table td {
-            border-bottom: 1px solid #059669;
-        }
-        .card-green .custom-table tr:hover {
-            background-color: #059669;
-            color: #ffffff;
-        }
-
-        /* Search Box inside Colored Cards */
-        .card-search-box { position: relative; }
-        .card-search-box input { 
-            padding: 8px 10px 8px 35px; 
-            border: 1px solid rgba(255,255,255,0.4); 
-            border-radius: 6px; 
-            font-size: 0.9rem; 
-            background: rgba(255,255,255,0.1);
-            color: rgb(15, 15, 15);
-            width: 220px;
-            transition: all 0.3s;
-        }
-        .card-search-box input::placeholder { color: rgba(10, 10, 10, 0.7); }
-        .card-search-box input:focus { outline: none; background: rgba(255,255,255,0.2); border-color: rgb(29, 23, 23); }
-        .card-search-box i { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: rgba(255,255,255,0.7); }
-        @media (max-width: 768px) { .card-search-box input { width: 100%; } }
-
-        /* Tab Kelas (Modal Input Jurnal) */
-        .kelas-tabs { display: flex; gap: 8px; overflow-x: auto; padding-bottom: 10px; margin-bottom: 10px; border-bottom: 1px solid #eee; -webkit-overflow-scrolling: touch; }
-        .kelas-tab { flex: 0 0 auto; display: inline-flex; align-items: center; gap: 6px; padding: 8px 14px; border: 1px solid #ddd; background: #f3f4f6; color: #475569; border-radius: 20px; cursor: pointer; font-size: 0.9rem; font-weight: 600; transition: all 0.2s; }
-        .kelas-tab:hover { background: #e5e7eb; }
-        .kelas-tab.active { background: var(--primary-color); border-color: var(--primary-color); color: white; }
-        .kelas-tab .tab-count { background: rgba(0,0,0,0.12); border-radius: 10px; padding: 1px 8px; font-size: 0.75rem; }
-        .kelas-tab.active .tab-count { background: rgba(255,255,255,0.25); }
-        .kelas-tab.saved { border-color: #10b981; }
-        .kelas-tab.saved i { color: #10b981; }
-        .kelas-tab.active.saved i { color: white; }
-        #jurnalSubmitBtn:disabled { opacity: 0.6; cursor: not-allowed; }
-
-        /* Footer */
-        .main-footer {
-            text-align: center;
-            padding: 20px;
-            color: #888;
-            font-size: 0.85rem;
-            border-top: 1px solid #eee;
-            margin-top: 20px;
-        }
-
-
-        @media (max-width: 768px) {
-            .navbar-brand span {
-                font-size: 1rem;
-            }
-
-            .mobile-vertical-btn {
-                flex-direction: column;
-                width: 100%;
-            }
-
-            .mobile-vertical-btn .btn {
-                width: 100%;
-                justify-content: center;
-            }
-
-            .main-content {
-                padding-left: 5px;
-                padding-right: 5px;
-            }
-        }
-    </style>
+/* Transisi antar halaman */
+@view-transition{navigation:auto}
+.navbar{view-transition-name:pt-nav}
+.dock{view-transition-name:pt-dock}
+@keyframes pt-out{to{opacity:0;transform:translateY(-8px) scale(.995)}}
+@keyframes pt-in{from{opacity:0;transform:translateY(12px) scale(.997)}}
+::view-transition-group(*){animation-duration:.35s}
+::view-transition-old(root){animation:.2s cubic-bezier(.4,0,1,1) both pt-out}
+::view-transition-new(root){animation:.4s cubic-bezier(.2,.8,.2,1) both pt-in}
+.pt-fb .main-content{animation:pt-in .4s cubic-bezier(.2,.8,.2,1) both}
+.pt-fb.pt-leave .main-content,.pt-fb.pt-leave .dock{opacity:0;transform:translateY(-8px);transition:opacity .2s ease,transform .2s ease}
+</style>
+<script>if(!('PageSwapEvent' in window))document.documentElement.classList.add('pt-fb');</script>
 </head>
 <body>
 
@@ -290,91 +230,57 @@
     <nav class="navbar">
         <a href="#" class="navbar-brand">
             <img src="" alt="Logo Sekolah" style="display: none;">
+            <svg class="sch-fallback" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 10l9-6 9 6M5 10v9h14v-9M9 19v-5h6v5"/></svg>
             <span></span>
         </a>
-        <a href="adminguru.html" class="btn-back-dashboard">Kembali Ke Dashboard</a>
     </nav>
 
     <!-- Main Content Area -->
     <main class="main-content">
-        <div style="display: flex; justify-content: flex-end; margin-bottom: 20px;">
-            <div style="background: white; padding: 10px 20px; border-radius: 30px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); color: #555; font-weight: 600; font-size: 0.9rem; display: flex; align-items: center; gap: 10px;">
-                <i class="far fa-clock" style="color: var(--navbar-bg);"></i>
-                <span id="liveDateTime"></span>
-            </div>
-        </div>
-        <div class="dashboard-card" style="background: #1f2937; color: white; border: 1px solid #374151;">
-            <div style="border-bottom: 1px solid #374151; padding-bottom: 15px; margin-bottom: 15px; display: flex; justify-content: space-between; align-items: center;">
-                <h2 style="color: white; margin: 0;">Petugas Piket Hari Ini</h2>
-                <span id="todayBadge" style="background: var(--navbar-bg); color: white; padding: 5px 15px; border-radius: 20px; font-size: 0.9rem; font-weight: bold;"></span>
-            </div>
-            <div id="piketList" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 20px;">
-                <p style="grid-column: 1/-1; text-align: center; color: #cbd5e1;">Memuat data...</p>
-            </div>
-        </div>
-        
-        <!-- Data Petugas Piket Umum Siswa -->
-        <div class="dashboard-card card-blue">
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 10px;">
-                <h2 style="color: white; margin: 0;">Petugas Piket Umum Siswa</h2>
-                <div class="mobile-vertical-btn" style="display: flex; gap: 10px;">
-                    <button class="btn btn-primary" id="settingPiketSiswaBtn"><i class="fas fa-cogs"></i> Pengaturan Piket Siswa</button>
-                    <button class="btn btn-danger" id="exportPiketSiswaBtn"><i class="fas fa-file-pdf"></i> Export</button>
-                    <button class="btn btn-warning" id="viewAllPiketBtn"><i class="fas fa-list"></i> Lihat Semua Jadwal</button>
-                </div>
-            </div>
-            
-            <div class="table-responsive">
-                <table class="custom-table">
-                    <thead>
-                        <tr>
-                            <th>No</th>
-                            <th>ID Petugas</th>
-                            <th>Nama Siswa</th>
-                            <th>NISN</th>
-                            <th>Kelas</th>
-                            <th>Area Piket</th>
-                            <th>Aksi</th>
-                        </tr>
-                    </thead>
-                    <tbody id="piketSiswaTableBody">
-                        <tr>
-                            <td colspan="7" style="text-align: center; padding: 20px; color: #e0e7ff;">Belum ada data petugas piket siswa.</td>
-                        </tr>
-                    </tbody>
-                </table>
-            </div>
+        <div class="head">
+            <div><h1>Piket Harian</h1><p>Petugas piket guru dan siswa hari ini</p></div>
+            <span class="chip"><i class="far fa-clock"></i><span id="liveDateTime"></span></span>
         </div>
 
+        <section class="panel box">
+            <div class="box-head">
+                <div class="ttl"><span class="ic orange"><i class="fas fa-user-shield"></i></span><h2>Petugas Piket Hari Ini</h2></div>
+                <span id="todayBadge" class="badge"></span>
+            </div>
+            <div id="piketList" class="guru-grid">
+                <p class="note">Memuat data...</p>
+            </div>
+        </section>
+
         <!-- Container Jurnal Piket Siswa -->
-        <div class="dashboard-card card-green">
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 10px;">
-                <div style="display: flex; align-items: center; gap: 15px; flex-wrap: wrap;">
-                    <h2 style="color: white; margin: 0;">Jurnal Piket Siswa</h2>
-                    <div class="card-search-box">
-                        <i class="fas fa-search"></i>
-                        <input type="text" id="searchJurnalInput" placeholder="Cari Riwayat Piket...">
-                    </div>
-                    <select id="filterStatusPiket" style="padding: 8px 10px; border: 1px solid rgba(255,255,255,0.4); border-radius: 6px; font-size: 0.9rem; background: rgba(255,255,255,0.1); color: rgb(15, 15, 15); width: 150px; outline: none; cursor: pointer;">
-                        <option value="" style="color: #333;">Semua Status</option>
-                        <option value="Ya" style="color: #333;">Ya</option>
-                        <option value="Tidak" style="color: #333;">Tidak</option>
-                    </select>
-                    <select id="filterBulanJurnal" title="Filter Bulan" style="padding: 8px 10px; border: 1px solid rgba(255,255,255,0.4); border-radius: 6px; font-size: 0.9rem; background: rgba(255,255,255,0.1); color: rgb(15, 15, 15); width: 160px; outline: none; cursor: pointer;">
-                        <option value="" style="color: #333;">Semua Bulan</option>
-                    </select>
-                    <select id="filterKelasJurnal" title="Filter Kelas" style="padding: 8px 10px; border: 1px solid rgba(255,255,255,0.4); border-radius: 6px; font-size: 0.9rem; background: rgba(255,255,255,0.1); color: rgb(15, 15, 15); width: 160px; outline: none; cursor: pointer;">
-                        <option value="" style="color: #333;">Semua Kelas</option>
-                    </select>
-                </div>
-                <div class="mobile-vertical-btn" style="display: flex; gap: 10px;">
-                    <button class="btn btn-primary" id="inputJurnalBtn"><i class="fas fa-plus"></i> Input Data Piket</button>
+        <section class="panel box">
+            <div class="box-head">
+                <div class="ttl"><span class="ic green"><i class="fas fa-clipboard-list"></i></span><h2>Jurnal Piket Siswa</h2></div>
+                <div class="btn-row mobile-vertical-btn">
                     <button class="btn btn-danger" id="exportJurnalBtn"><i class="fas fa-file-pdf"></i> Export Pdf</button>
                 </div>
             </div>
-            
+
+            <div class="filters">
+                <div class="card-search-box">
+                    <i class="fas fa-search"></i>
+                    <input type="text" id="searchJurnalInput" placeholder="Cari Riwayat Piket...">
+                </div>
+                <select id="filterStatusPiket">
+                    <option value="">Semua Status</option>
+                    <option value="Ya">Ya</option>
+                    <option value="Tidak">Tidak</option>
+                </select>
+                <select id="filterBulanJurnal" title="Filter Bulan">
+                    <option value="">Semua Bulan</option>
+                </select>
+                <select id="filterKelasJurnal" title="Filter Kelas">
+                    <option value="">Semua Kelas</option>
+                </select>
+            </div>
+
             <div class="table-responsive">
-                <table class="custom-table">
+                <table class="custom-table" id="jurnalPiketTable">
                     <thead>
                         <tr>
                             <th>Id</th>
@@ -390,23 +296,34 @@
                     </thead>
                     <tbody id="jurnalPiketTableBody">
                         <tr>
-                            <td colspan="9" style="text-align: center; padding: 20px; color: #d1fae5;">Belum ada data jurnal piket.</td>
+                            <td colspan="9" class="cell-note">Belum ada data jurnal piket.</td>
                         </tr>
                     </tbody>
                 </table>
             </div>
-            
+
             <!-- Pagination Controls -->
-            <div id="jurnalPagination" style="display: flex; justify-content: center; align-items: center; gap: 10px; margin-top: 20px;"></div>
-        </div>
+            <div id="jurnalPagination"></div>
+        </section>
 
         <!-- Footer -->
-        <footer class="main-footer">
+        <footer class="main-footer panel">
             <p>&copy; 2026 SMKN 1 Mentok.</p>
             <p>Project Manager : Adi Kusumardi, S.T., M.Pd.</p>
             <p>Software Developer : KenjiStudioDeveloper</p>
         </footer>
     </main>
+
+    <!-- Dock bawah -->
+    <div class="dock">
+        <nav aria-label="Menu utama">
+            <a class="d" href="adminguru.html"><span class="ic" style="background:linear-gradient(160deg,#4da3ff,#0a5fe0)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="2"/><rect x="14" y="3" width="7" height="7" rx="2"/><rect x="3" y="14" width="7" height="7" rx="2"/><rect x="14" y="14" width="7" height="7" rx="2"/></svg></span>Dashboard</a>
+            <button type="button" class="d" id="settingPiketSiswaBtn" title="Pengaturan Piket Siswa"><span class="ic" style="background:linear-gradient(160deg,#a1a1a6,#636366)"><i class="fas fa-cogs"></i></span>Pengaturan Piket</button>
+            <button type="button" class="d" id="inputJurnalBtn" title="Input Data Piket"><span class="ic" style="background:linear-gradient(160deg,#5be37a,#1fa23c)"><i class="fas fa-plus"></i></span>Input Piket</button>
+            <button type="button" class="d" id="viewAllPiketBtn" title="Lihat Semua Jadwal"><span class="ic" style="background:linear-gradient(160deg,#ffb454,#f0780a)"><i class="fas fa-list"></i></span>Lihat Jadwal</button>
+            <button type="button" class="d" id="exportPiketSiswaBtn" title="Export Petugas Piket Siswa"><span class="ic" style="background:linear-gradient(160deg,#ff7a8a,#e11d48)"><i class="fas fa-file-pdf"></i></span>Export</button>
+        </nav>
+    </div>
 
     <!-- Modal Pengaturan Piket Siswa -->
     <div id="piketSiswaModal" class="modal">
@@ -471,10 +388,12 @@
                 <h3>Jadwal Piket Siswa (Senin - Jumat)</h3>
                 <span class="close-modal" id="closeAllPiketModal">&times;</span>
             </div>
-            <div class="modal-body" style="overflow-y: auto; padding: 20px; flex: 1;">
+            <div id="allPiketHariTabs" class="hari-tabs" role="tablist" aria-label="Hari"></div>
+            <div id="allPiketKelasTabs" class="kelas-tabs" role="tablist" aria-label="Kelas"></div>
+            <div class="modal-body" style="overflow-y: auto; overflow-x: hidden; flex: 1; min-height: 0; padding: 2px 0 4px;">
                 <div id="allPiketContainer"></div>
             </div>
-            <div class="modal-footer" style="border-top: 1px solid #eee; padding: 15px;">
+            <div class="modal-footer">
                 <button class="btn btn-danger" id="exportAllPiketPdfBtn"><i class="fas fa-file-pdf"></i> Export PDF</button>
                 <button class="btn btn-secondary" id="closeAllPiketModalBtn">Close</button>
             </div>
@@ -483,14 +402,12 @@
 
     <!-- Modal Notifikasi Duplikat -->
     <div id="duplicateModal" class="modal" style="z-index: 2100;">
-        <div class="modal-content" style="max-width: 500px; text-align: center; padding: 30px;">
-            <div style="margin-bottom: 20px;">
-                <i class="fas fa-info-circle" style="font-size: 4rem; color: #3b82f6;"></i>
-            </div>
-            <h3 style="color: #333; margin-bottom: 15px; font-size: 1.3rem;">Informasi Input Data</h3>
-            <div id="duplicateMessage" style="color: #666; margin-bottom: 25px; line-height: 1.5; text-align: left; background: #f9fafb; padding: 15px; border-radius: 8px; max-height: 200px; overflow-y: auto;"></div>
+        <div class="modal-content" style="max-width: 500px; text-align: center;">
+            <div><i class="fas fa-info-circle dup-icon"></i></div>
+            <h3 style="margin-bottom: 14px; font-size: 1.2rem;">Informasi Input Data</h3>
+            <div id="duplicateMessage" class="dup-msg"></div>
             <div style="display: flex; justify-content: center;">
-                <button onclick="document.getElementById('duplicateModal').classList.remove('active')" class="btn btn-primary" style="padding: 10px 30px;">Mengerti</button>
+                <button onclick="document.getElementById('duplicateModal').classList.remove('active')" class="btn btn-primary" style="padding: 9px 30px;">Mengerti</button>
             </div>
         </div>
     </div>
@@ -503,21 +420,21 @@
                 <span class="close-modal" id="closeJurnalModal">&times;</span>
             </div>
             <div class="modal-body">
-                <div id="jurnalDateDisplay" style="font-size: 1.2rem; font-weight: bold; color: var(--primary-color); margin-bottom: 20px; text-align: center; border-bottom: 1px solid #eee; padding-bottom: 10px;"></div>
+                <div id="jurnalDateDisplay" class="jdate"></div>
                 <form id="jurnalForm">
                     <div id="jurnalKelasTabs" class="kelas-tabs"></div>
                     <div class="table-responsive">
                         <table class="custom-table">
                             <thead>
                                 <tr>
-                                    <th>ID Piket</th>
-                                    <th>ID Petugas</th>
                                     <th>Nama Siswa</th>
-                                    <th>NISN</th>
-                                    <th>Kelas</th>
-                                    <th>Area</th>
                                     <th>Status</th>
+                                    <th>Area</th>
                                     <th>Aksi</th>
+                                    <th class="col-hide">ID Piket</th>
+                                    <th class="col-hide">ID Petugas</th>
+                                    <th class="col-hide">NISN</th>
+                                    <th class="col-hide">Kelas</th>
                                 </tr>
                             </thead>
                             <tbody id="jurnalInputTableBody">
@@ -665,15 +582,11 @@
 
                 // Jika tidak ada jadwal atau guru tidak terdaftar hari ini
                 if (!data || data.length === 0 || !isScheduled) {
-                    container.innerHTML = `<div style="grid-column: 1/-1; text-align: center; padding: 20px; color: #cbd5e1; background: #111827; border-radius: 8px;">
-                        <div style="background: rgba(185, 28, 28, 0.2); color: #fca5a5; padding: 20px; border-radius: 8px; border: 1px solid #7f1d1d; display: inline-block; margin-top: 20px;">
-                            <i class="fas fa-exclamation-circle" style="font-size: 2rem; margin-bottom: 10px;"></i>
-                            <h3 style="margin: 0 0 5px 0;">Akses Dibatasi</h3>
-                            <p style="margin: 0;">Maaf, Jadwal Piket anda bukan hari ini.</p>
-                        </div>
-                        <div style="margin-top: 20px;">
-                            <a href="adminguru.html" class="btn" style="background: #6b7280; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px;">Kembali ke Dashboard</a>
-                        </div>
+                    container.innerHTML = `<div class="denied">
+                        <i class="fas fa-exclamation-circle"></i>
+                        <h3>Akses Dibatasi</h3>
+                        <p>Maaf, Jadwal Piket anda bukan hari ini.</p>
+                        <a href="adminguru.html" class="btn btn-primary">Kembali ke Dashboard</a>
                     </div>`;
 
                     // Nonaktifkan tombol Input Data Piket jika akses dibatasi
@@ -719,18 +632,13 @@
                         if (!nama) return '';
                         const photoUrl = photoMap[nama];
                         const avatarContent = photoUrl 
-                            ? `<img src="${photoUrl}" alt="${nama}" style="width: 100%; height: 100%; object-fit: cover;">` 
+                            ? `<img src="${photoUrl}" alt="${nama}">` 
                             : `<i class="${iconClass}"></i>`;
 
                         return `
-                            <div style="background: #111827; padding: 15px; border-radius: 8px; border-left: 4px solid ${colorClass}; box-shadow: 0 4px 6px rgba(0,0,0,0.3);">
-                                <div style="font-size: 0.8rem; color: #9ca3af; margin-bottom: 5px; text-transform: uppercase; letter-spacing: 0.5px;">${label}</div>
-                                <div style="font-weight: 600; color: #f3f4f6; display: flex; align-items: center; gap: 10px;">
-                                    <div style="width: 40px; height: 40px; background: #374151; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: ${colorClass}; box-shadow: 0 1px 3px rgba(0,0,0,0.1); overflow: hidden; border: 1px solid ${colorClass}; flex-shrink: 0;">
-                                        ${avatarContent}
-                                    </div>
-                                    <span>${nama}</span>
-                                </div>
+                            <div class="guru" style="--c:${colorClass}">
+                                <div class="av">${avatarContent}</div>
+                                <div><small>${label}</small><b>${nama}</b></div>
                             </div>
                         `;
                     };
@@ -742,7 +650,7 @@
 
             } catch (err) {
                 console.error('Error loading piket:', err);
-                container.innerHTML = `<p style="grid-column: 1/-1; text-align: center; color: #ef4444;">Gagal memuat data: ${err.message}</p>`;
+                container.innerHTML = `<p class="note err">Gagal memuat data: ${err.message}</p>`;
             }
         }
         document.addEventListener('DOMContentLoaded', loadPiketHariIni);
@@ -935,69 +843,6 @@
             hariPiketSelect.addEventListener('change', generateIdPiket);
         }
 
-        // --- Load Data Piket Siswa (Tabel Petugas Piket Umum Siswa) ---
-        async function loadPiketSiswaData() {
-            const tableBody = document.getElementById('piketSiswaTableBody');
-            tableBody.innerHTML = '<tr><td colspan="7" style="text-align:center; color: #e0e7ff;">Memuat data...</td></tr>';
-
-            try {
-                const now = new Date();
-                const hariIni = now.toLocaleDateString('id-ID', { weekday: 'long' }).toUpperCase();
-
-                const { data, error } = await supabaseClient
-                    .from('datapiketsiswa')
-                    .select('*')
-                    .ilike('id_piket', `%${hariIni}%`)
-                    .order('id_piket', { ascending: true });
-
-                if (error) throw error;
-
-                tableBody.innerHTML = '';
-
-                if (!data || data.length === 0) {
-                    tableBody.innerHTML = `<tr><td colspan="7" style="text-align: center; color: #e0e7ff; padding: 20px;">Belum ada data petugas piket siswa untuk hari ${hariIni}.</td></tr>`;
-                    return;
-                }
-
-                data.forEach((item, index) => {
-                    const row = document.createElement('tr');
-                    row.innerHTML = `
-                        <td>${index + 1}</td>
-                        <td>${item.id_piket}</td>
-                        <td>${item.nama_siswa}</td>
-                        <td>${item.nisn || '-'}</td>
-                        <td>${item.kelas}</td>
-                        <td>${item.area}</td>
-                        <td>
-                            <button onclick="deletePiketSiswa('${item.id_piket}')" class="btn btn-danger" style="padding: 5px 10px; font-size: 0.8rem;"><i class="fas fa-trash"></i></button>
-                        </td>
-                    `;
-                    tableBody.appendChild(row);
-                });
-            } catch (err) {
-                console.error('Error loading piket siswa:', err);
-                tableBody.innerHTML = `<tr><td colspan="7" style="text-align:center; color: #fca5a5;">Gagal memuat data: ${err.message}</td></tr>`;
-            }
-        }
-
-        // --- Delete Piket Siswa ---
-        window.deletePiketSiswa = async function(id) {
-            if(confirm('Apakah Anda yakin ingin menghapus data ini?')) {
-                try {
-                    const { error } = await supabaseClient
-                        .from('datapiketsiswa')
-                        .delete()
-                        .eq('id_piket', id);
-                    
-                    if (error) throw error;
-                    alert('Data berhasil dihapus');
-                    loadPiketSiswaData();
-                } catch (err) {
-                    alert('Gagal menghapus: ' + err.message);
-                }
-            }
-        };
-
         // --- Form Submit Handler (Simpan Data Piket Siswa) ---
         if (piketSiswaForm) {
             piketSiswaForm.addEventListener('submit', async (e) => {
@@ -1025,7 +870,6 @@
 
                     alert('Data Petugas Piket Siswa berhasil disimpan!');
                     closePiketModalFunc();
-                    loadPiketSiswaData();
 
                 } catch (err) {
                     console.error(err);
@@ -1036,9 +880,6 @@
                 }
             });
         }
-
-        // Load data saat halaman dimuat
-        document.addEventListener('DOMContentLoaded', loadPiketSiswaData);
 
         // --- Export PDF Petugas Piket Siswa ---
         const exportPiketSiswaBtn = document.getElementById('exportPiketSiswaBtn');
@@ -1127,6 +968,7 @@
             viewAllPiketBtn.addEventListener('click', async () => {
                 allPiketModal.classList.add('active');
                 allPiketContainer.innerHTML = '<div style="text-align:center; padding:20px;"><i class="fas fa-spinner fa-spin"></i> Memuat data...</div>';
+                ['allPiketHariTabs', 'allPiketKelasTabs'].forEach(id => { const el = document.getElementById(id); if (el) el.innerHTML = ''; });
 
                 try {
                     const { data, error } = await supabaseClient
@@ -1142,62 +984,99 @@
                     }
 
                     const days = ['SENIN', 'SELASA', 'RABU', 'KAMIS', 'JUMAT'];
-                    let htmlContent = '';
+                    const hariEl = document.getElementById('allPiketHariTabs');
+                    const kelasEl = document.getElementById('allPiketKelasTabs');
+                    const labelHari = d => d.charAt(0) + d.slice(1).toLowerCase();
 
-                    days.forEach(day => {
-                        // Filter data berdasarkan ID yang mengandung nama hari (misal: ID_SENIN-...)
-                        const dayData = data.filter(item => item.id_piket && item.id_piket.toUpperCase().includes(`ID_${day}`));
-                        
-                        if (dayData.length > 0) {
-                            htmlContent += `
-                                <div style="margin-bottom: 30px; background: #f9fafb; border-radius: 8px; overflow: hidden; border: 1px solid #e5e7eb;">
-                                    <div style="background: #3b82f6; color: white; padding: 10px 15px; font-weight: bold; font-size: 1.1rem;">
-                                        <i class="fas fa-calendar-day"></i> ${day}
-                                    </div>
-                                    <div class="table-responsive">
-                                        <table class="custom-table" style="margin-top: 0;">
-                                            <thead style="background: #eff6ff; color: #1e3a8a;">
-                                                <tr>
-                                                    <th style="width: 50px;">No</th>
-                                                    <th>Nama Siswa</th>
-                                                    <th>NISN</th>
-                                                    <th>Kelas</th>
-                                                    <th>Area Piket</th>
-                                                </tr>
-                                            </thead>
-                                            <tbody>
-                            `;
-                            
-                            dayData.forEach((item, index) => {
-                                htmlContent += `
-                                    <tr>
-                                        <td>${index + 1}</td>
-                                        <td>${item.nama_siswa}</td>
-                                        <td>${item.nisn || '-'}</td>
-                                        <td>${item.kelas}</td>
-                                        <td>${item.area}</td>
-                                    </tr>
-                                `;
-                            });
-
-                            htmlContent += `
-                                            </tbody>
-                                        </table>
-                                    </div>
-                                </div>
-                            `;
-                        }
+                    // Kelompokkan: hari -> kelas -> daftar siswa (hari dibaca dari ID, misal ID_SENIN-...)
+                    const byDay = {};
+                    days.forEach(d => { byDay[d] = {}; });
+                    data.forEach(item => {
+                        if (!item.id_piket) return;
+                        days.forEach(day => {
+                            if (!item.id_piket.toUpperCase().includes(`ID_${day}`)) return;
+                            const k = item.kelas || '-';
+                            if (!byDay[day][k]) byDay[day][k] = [];
+                            byDay[day][k].push(item);
+                        });
                     });
-                    
-                    if (htmlContent === '') {
-                         allPiketContainer.innerHTML = '<p style="text-align:center; padding:20px;">Tidak ada data jadwal yang sesuai format hari.</p>';
-                    } else {
-                        allPiketContainer.innerHTML = htmlContent;
+                    const dayHasData = d => Object.keys(byDay[d]).length > 0;
+
+                    if (!days.some(dayHasData)) {
+                        hariEl.innerHTML = '';
+                        kelasEl.innerHTML = '';
+                        allPiketContainer.innerHTML = '<p style="text-align:center; padding:20px;">Tidak ada data jadwal yang sesuai format hari.</p>';
+                        return;
                     }
+
+                    // Tab hari awal: hari ini bila ada datanya, jika tidak hari pertama yang berisi
+                    const hariIni = new Date().toLocaleDateString('id-ID', { weekday: 'long' }).toUpperCase();
+                    let activeDay = dayHasData(hariIni) ? hariIni : days.find(dayHasData);
+                    let activeKelas = '';
+
+                    const renderJadwal = () => {
+                        // Tab tingkat 1: hari
+                        hariEl.innerHTML = '';
+                        days.forEach(d => {
+                            const btn = document.createElement('button');
+                            btn.type = 'button';
+                            btn.setAttribute('role', 'tab');
+                            btn.className = 'hari-tab' + (d === activeDay ? ' active' : '');
+                            btn.textContent = labelHari(d);
+                            btn.addEventListener('click', () => { activeDay = d; renderJadwal(); allPiketContainer.parentElement.scrollTop = 0; });
+                            hariEl.appendChild(btn);
+                        });
+
+                        // Tab tingkat 2: kelas di dalam hari yang dipilih
+                        const kelasList = Object.keys(byDay[activeDay]).sort(sortKelas);
+                        kelasEl.innerHTML = '';
+                        if (kelasList.length === 0) {
+                            allPiketContainer.innerHTML = `<p style="text-align:center; padding:20px; color:var(--muted);">Belum ada petugas piket pada hari ${labelHari(activeDay)}.</p>`;
+                            return;
+                        }
+                        if (!kelasList.includes(activeKelas)) activeKelas = kelasList[0];
+
+                        kelasList.forEach(k => {
+                            const btn = document.createElement('button');
+                            btn.type = 'button';
+                            btn.setAttribute('role', 'tab');
+                            btn.className = 'kelas-tab' + (k === activeKelas ? ' active' : '');
+                            btn.textContent = k;
+                            btn.addEventListener('click', () => { activeKelas = k; renderJadwal(); allPiketContainer.parentElement.scrollTop = 0; });
+                            kelasEl.appendChild(btn);
+                        });
+
+                        // Data piket untuk hari + kelas terpilih
+                        const rows = byDay[activeDay][activeKelas];
+                        allPiketContainer.innerHTML = `
+                            <div class="table-responsive">
+                                <table class="custom-table">
+                                    <thead>
+                                        <tr>
+                                            <th>No</th>
+                                            <th>Nama Siswa</th>
+                                            <th>NISN</th>
+                                            <th>Area Piket</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        ${rows.map((item, index) => `
+                                        <tr>
+                                            <td>${index + 1}</td>
+                                            <td>${item.nama_siswa}</td>
+                                            <td>${item.nisn || '-'}</td>
+                                            <td>${item.area}</td>
+                                        </tr>`).join('')}
+                                    </tbody>
+                                </table>
+                            </div>
+                        `;
+                    };
+                    renderJadwal();
 
                 } catch (err) {
                     console.error(err);
-                    allPiketContainer.innerHTML = `<p style="text-align:center; color:red; padding:20px;">Gagal memuat: ${err.message}</p>`;
+                    allPiketContainer.innerHTML = `<p class="note err">Gagal memuat: ${err.message}</p>`;
                 }
             });
         }
@@ -1397,21 +1276,21 @@
                         const journalId = `JRN-${dateCode}-${item.nisn || index}.${random3}`;
                         
                         row.innerHTML = `
-                            <td><input type="text" name="id_piket[]" value="${journalId}" readonly style="width:100%; border:none; background:transparent; font-size:0.9rem;"></td>
-                            <td><input type="text" name="id_petugas[]" value="${item.id_piket}" readonly style="width:100%; border:none; background:transparent; font-size:0.9rem;"></td>
                             <td>${item.nama_siswa} <input type="hidden" name="nama_siswa[]" value="${item.nama_siswa}"></td>
-                            <td>${item.nisn || '-'} <input type="hidden" name="nisn[]" value="${item.nisn || ''}"></td>
-                            <td>${item.kelas} <input type="hidden" name="kelas[]" value="${item.kelas}"></td>
-                            <td>${item.area} <input type="hidden" name="area[]" value="${item.area}"></td>
                             <td>
-                                <div style="display:flex; gap:15px;">
-                                    <label style="font-weight:normal; cursor:pointer; display:flex; align-items:center; gap:5px;"><input type="radio" name="status_${index}" value="Ya" checked> Ya</label>
-                                    <label style="font-weight:normal; cursor:pointer; display:flex; align-items:center; gap:5px;"><input type="radio" name="status_${index}" value="Tidak"> Tidak</label>
+                                <div class="status-opts">
+                                    <label><input type="radio" name="status_${index}" value="Ya" checked> Ya</label>
+                                    <label><input type="radio" name="status_${index}" value="Tidak"> Tidak</label>
                                 </div>
                             </td>
+                            <td>${item.area} <input type="hidden" name="area[]" value="${item.area}"></td>
                             <td>
                                 <button type="button" class="btn btn-danger" style="padding:4px 8px; font-size:0.8rem;" onclick="removeJurnalRow(this)"><i class="fas fa-trash"></i></button>
                             </td>
+                            <td class="col-hide"><input type="text" name="id_piket[]" value="${journalId}" readonly></td>
+                            <td class="col-hide"><input type="text" name="id_petugas[]" value="${item.id_piket}" readonly></td>
+                            <td class="col-hide">${item.nisn || '-'} <input type="hidden" name="nisn[]" value="${item.nisn || ''}"></td>
+                            <td class="col-hide">${item.kelas} <input type="hidden" name="kelas[]" value="${item.kelas}"></td>
                         `;
                         jurnalInputTableBody.appendChild(row);
                     });
@@ -1420,7 +1299,7 @@
 
                 } catch (err) {
                     console.error(err);
-                    jurnalInputTableBody.innerHTML = `<tr><td colspan="8" style="text-align:center; color:red;">Error: ${err.message}</td></tr>`;
+                    jurnalInputTableBody.innerHTML = `<tr><td colspan="8" class="cell-note err">Error: ${err.message}</td></tr>`;
                 }
             });
         }
@@ -1610,9 +1489,9 @@
                         msg += `</ul><br>`;
                         
                         if (finalInserts.length > 0) {
-                            msg += `<span style="color: #10b981; font-weight: bold;">Data lainnya (${finalInserts.length} siswa) berhasil disimpan.</span>`;
+                            msg += `<span class="ok">Data lainnya (${finalInserts.length} siswa) berhasil disimpan.</span>`;
                         } else {
-                            msg += `<span style="color: #ef4444; font-weight: bold;">Tidak ada data baru yang disimpan.</span>`;
+                            msg += `<span class="bad">Tidak ada data baru yang disimpan.</span>`;
                         }
                         
                         duplicateMessage.innerHTML = msg;
@@ -1641,7 +1520,7 @@
             const tableBody = document.getElementById('jurnalPiketTableBody');
             if (!tableBody) return;
             
-            tableBody.innerHTML = '<tr><td colspan="9" style="text-align:center; color:#d1fae5;">Memuat data...</td></tr>';
+            tableBody.innerHTML = '<tr><td colspan="9" class="cell-note">Memuat data...</td></tr>';
             
             try {
                 const { data, error } = await supabaseClient
@@ -1657,7 +1536,7 @@
 
             } catch (err) {
                 console.error(err);
-                tableBody.innerHTML = `<tr><td colspan="9" style="text-align:center; color:#fca5a5;">Gagal memuat: ${err.message}</td></tr>`;
+                tableBody.innerHTML = `<tr><td colspan="9" class="cell-note err">Gagal memuat: ${err.message}</td></tr>`;
             }
         }
 
@@ -1702,10 +1581,10 @@
             const bulanList = [...bulanSet].sort().reverse(); // terbaru di atas
             const kelasList = [...kelasSet].sort((a, b) => a.localeCompare(b, 'id', { numeric: true }));
 
-            selBulan.innerHTML = '<option value="" style="color: #333;">Semua Bulan</option>' +
-                bulanList.map(k => `<option value="${k}" style="color: #333;">${jurnalMonthLabel(k)}</option>`).join('');
-            selKelas.innerHTML = '<option value="" style="color: #333;">Semua Kelas</option>' +
-                kelasList.map(k => `<option value="${k}" style="color: #333;">${k}</option>`).join('');
+            selBulan.innerHTML = '<option value="">Semua Bulan</option>' +
+                bulanList.map(k => `<option value="${k}">${jurnalMonthLabel(k)}</option>`).join('');
+            selKelas.innerHTML = '<option value="">Semua Kelas</option>' +
+                kelasList.map(k => `<option value="${k}">${k}</option>`).join('');
 
             // Pertahankan pilihan sebelumnya jika masih tersedia
             if (bulanSet.has(prevBulan)) selBulan.value = prevBulan;
@@ -1762,7 +1641,7 @@
             tableBody.innerHTML = '';
 
             if (paginatedData.length === 0) {
-                tableBody.innerHTML = '<tr><td colspan="9" style="text-align:center; color:#d1fae5; padding:20px;">Data tidak ditemukan.</td></tr>';
+                tableBody.innerHTML = '<tr><td colspan="9" class="cell-note">Data tidak ditemukan.</td></tr>';
             } else {
                 paginatedData.forEach(item => {
                     // Format Tanggal: Rabu, 11 Februari 2026
@@ -1781,7 +1660,7 @@
                         <td>${item.nisn || '-'}</td>
                         <td>${item.kelas}</td>
                         <td>${item.area}</td>
-                        <td>${item.status}</td>
+                        <td><span class="st ${item.status === 'Ya' ? 'ya' : 'tidak'}">${item.status}</span></td>
                         <td>
                             <button class="btn btn-danger" style="padding:5px 10px; font-size:0.8rem;" onclick="deleteJurnal('${item.id_piket}')"><i class="fas fa-trash"></i></button>
                         </td>
@@ -2025,5 +1904,23 @@
             });
         }
     </script>
+<script>
+/* Fallback transisi untuk browser tanpa dukungan View Transitions */
+(function(){
+  var h=document.documentElement;
+  if(!h.classList.contains('pt-fb'))return;
+  window.addEventListener('pageshow',function(e){if(e.persisted)h.classList.remove('pt-leave')});
+  document.addEventListener('click',function(e){
+    var a=e.target.closest&&e.target.closest('a[href]');
+    if(!a||e.defaultPrevented||e.button!==0||e.metaKey||e.ctrlKey||e.shiftKey||e.altKey)return;
+    if(a.target&&a.target!=='_self')return;
+    var u=new URL(a.href,location.href);
+    if(u.origin!==location.origin||(u.pathname===location.pathname&&u.search===location.search))return;
+    if(window.matchMedia('(prefers-reduced-motion:reduce)').matches)return;
+    e.preventDefault();h.classList.add('pt-leave');
+    setTimeout(function(){location.href=a.href},220);
+  });
+})();
+</script>
 </body>
 </html>
