@@ -412,6 +412,18 @@ h1{font-size:clamp(26px,4.5vw,36px);letter-spacing:-.025em;line-height:1.1}
         </div>
     </div>
 
+    <!-- Modal Peringatan Status Piket -->
+    <div id="statusWarnModal" class="modal" style="z-index: 2200;">
+        <div class="modal-content" style="max-width: 400px; text-align: center;">
+            <div><i class="fas fa-exclamation-triangle" style="font-size:48px;color:var(--orange);margin-bottom:12px;"></i></div>
+            <h3 style="margin-bottom: 8px; font-size: 1.2rem;">Peringatan</h3>
+            <div id="statusWarnMessage" style="margin-bottom: 18px; color: var(--muted);">Silahkan memilih status piket terlebih dahulu..!</div>
+            <div style="display: flex; justify-content: center;">
+                <button type="button" id="statusWarnOk" class="btn btn-primary" style="padding: 9px 30px;">Mengerti</button>
+            </div>
+        </div>
+    </div>
+
     <!-- Modal Input Jurnal Piket -->
     <div id="jurnalModal" class="modal">
         <div class="modal-content" style="max-width: 95%; width: 1100px;">
@@ -1279,7 +1291,7 @@ h1{font-size:clamp(26px,4.5vw,36px);letter-spacing:-.025em;line-height:1.1}
                             <td>${item.nama_siswa} <input type="hidden" name="nama_siswa[]" value="${item.nama_siswa}"></td>
                             <td>
                                 <div class="status-opts">
-                                    <label><input type="radio" name="status_${index}" value="Ya" checked> Ya</label>
+                                    <label><input type="radio" name="status_${index}" value="Ya"> Ya</label>
                                     <label><input type="radio" name="status_${index}" value="Tidak"> Tidak</label>
                                 </div>
                             </td>
@@ -1397,6 +1409,23 @@ h1{font-size:clamp(26px,4.5vw,36px);letter-spacing:-.025em;line-height:1.1}
         if (jurnalForm) {
             jurnalForm.addEventListener('submit', async (e) => {
                 e.preventDefault();
+
+                // Validasi: semua siswa di kelas aktif harus sudah dipilih statusnya
+                const unchosenRows = getJurnalRows().filter(r =>
+                    r.dataset.kelas === activeJurnalKelas &&
+                    !r.querySelector('input[type="radio"]:checked'));
+                getJurnalRows().forEach(r => { r.style.background = ''; });
+                if (unchosenRows.length > 0) {
+                    unchosenRows.forEach(r => { r.style.background = 'rgba(255,159,10,.18)'; });
+                    const warnModal = document.getElementById('statusWarnModal');
+                    warnModal.classList.add('active');
+                    document.getElementById('statusWarnOk').onclick = () => {
+                        warnModal.classList.remove('active');
+                        unchosenRows[0].scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    };
+                    return;
+                }
+
                 const submitBtn = jurnalForm.querySelector('button[type="submit"]');
                 const originalText = submitBtn.textContent;
                 submitBtn.textContent = 'Menyimpan...';
@@ -1416,7 +1445,7 @@ h1{font-size:clamp(26px,4.5vw,36px);letter-spacing:-.025em;line-height:1.1}
                         const nisn = row.querySelector('input[name="nisn[]"]').value;
                         const kelas = row.querySelector('input[name="kelas[]"]').value;
                         const area = row.querySelector('input[name="area[]"]').value;
-                        const status = row.querySelector(`input[type="radio"]:checked`)?.value || 'Tidak';
+                        const status = row.querySelector(`input[type="radio"]:checked`)?.value;
 
                         inserts.push({
                             id_piket: idPiket,
