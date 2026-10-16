@@ -844,7 +844,20 @@ h1{font-size:clamp(26px,4.5vw,36px);letter-spacing:-.025em;line-height:1.1}
                 </div>
                 <div class="form-group">
                     <label>Upload Photo Pembinaan</label>
-                    <input type="file" id="pembinaanPhoto" accept="image/*">
+                    <div style="display:flex; gap:8px; align-items:center;">
+                        <input type="file" id="pembinaanPhoto" accept="image/*" style="flex:1; min-width:0;">
+                        <button type="button" id="pembinaanCameraBtn" title="Ambil foto dari kamera" aria-label="Ambil foto dari kamera" style="flex:none; width:40px; height:40px; border:0; border-radius:10px; background:linear-gradient(160deg,#c58bff,#8e44ef); color:#fff; font-size:16px; cursor:pointer;"><i class="fas fa-camera"></i></button>
+                    </div>
+                    <input type="file" id="pembinaanPhotoCapture" accept="image/*" capture="environment" style="display:none;">
+                    <div id="pembinaanCameraPanel" style="display:none; margin-top:10px;">
+                        <div style="width:100%; aspect-ratio:16/9; border-radius:10px; overflow:hidden; background:#000;">
+                            <video id="pembinaanCameraVideo" autoplay playsinline muted style="width:100%; height:100%; object-fit:cover; display:block;"></video>
+                        </div>
+                        <div style="display:flex; gap:8px; margin-top:8px;">
+                            <button type="button" class="btn btn-primary" id="pembinaanCameraSnap" style="flex:1;"><i class="fas fa-camera"></i> Ambil Foto</button>
+                            <button type="button" class="btn btn-secondary" id="pembinaanCameraCancel">Tutup Kamera</button>
+                        </div>
+                    </div>
                     <div id="pembinaanPhotoWrap" style="display:none; margin-top:10px; width:100%; aspect-ratio:16/9; border-radius:10px; overflow:hidden; background:var(--track); box-shadow:inset 0 0 0 .5px var(--line);">
                         <img id="pembinaanPhotoPreview" alt="Preview" style="width:100%; height:100%; object-fit:cover; display:block;">
                     </div>
@@ -3169,6 +3182,7 @@ h1{font-size:clamp(26px,4.5vw,36px);letter-spacing:-.025em;line-height:1.1}
                 $('pembinaanPhotoInfo').style.display = 'none';
                 $('pembinaanPhotoPreview').src = '';
                 pembinaanPhotoBlob = null;
+                stopPembinaanCamera();
                 pembinaanIdSuffix = '';
                 generatePembinaanId();
 
@@ -3216,15 +3230,15 @@ h1{font-size:clamp(26px,4.5vw,36px);letter-spacing:-.025em;line-height:1.1}
 
             $('pembinaanTanggal').addEventListener('change', generatePembinaanId);
 
-            $('pembinaanPhoto').addEventListener('change', async (e) => {
-                const file = e.target.files[0];
+            // Proses file foto (dari upload / kamera): validasi, kompres, preview
+            async function processPembinaanPhoto(file, inputEl) {
                 const wrap = $('pembinaanPhotoWrap');
                 const info = $('pembinaanPhotoInfo');
                 pembinaanPhotoBlob = null;
                 if (!file) { wrap.style.display = 'none'; info.style.display = 'none'; return; }
                 if (!file.type.startsWith('image/')) {
                     alert('Pilih file gambar.');
-                    e.target.value = '';
+                    if (inputEl) inputEl.value = '';
                     wrap.style.display = 'none'; info.style.display = 'none';
                     return;
                 }
@@ -3237,10 +3251,85 @@ h1{font-size:clamp(26px,4.5vw,36px);letter-spacing:-.025em;line-height:1.1}
                     info.textContent = `Ukuran: ${(file.size / 1024).toFixed(0)} KB → ${(pembinaanPhotoBlob.size / 1024).toFixed(1)} KB (dikompres)`;
                 } catch (err) {
                     alert(err.message);
-                    e.target.value = '';
+                    if (inputEl) inputEl.value = '';
                     wrap.style.display = 'none'; info.style.display = 'none';
                 }
+            }
+
+            $('pembinaanPhoto').addEventListener('change', (e) => {
+                stopPembinaanCamera();
+                $('pembinaanPhotoCapture').value = '';
+                processPembinaanPhoto(e.target.files[0], e.target);
             });
+
+            // ===== Kamera =====
+            let pembinaanCameraStream = null;
+
+            function stopPembinaanCamera() {
+                if (pembinaanCameraStream) {
+                    pembinaanCameraStream.getTracks().forEach(t => t.stop());
+                    pembinaanCameraStream = null;
+                }
+                const v = $('pembinaanCameraVideo');
+                if (v) v.srcObject = null;
+                $('pembinaanCameraPanel').style.display = 'none';
+            }
+
+            // Kamera bawaan HP (input capture) - hasilnya diproses seperti upload biasa
+            $('pembinaanPhotoCapture').addEventListener('change', (e) => {
+                const file = e.target.files[0];
+                if (!file) return;
+                $('pembinaanPhoto').value = '';
+                processPembinaanPhoto(file, e.target);
+            });
+
+            $('pembinaanCameraBtn').addEventListener('click', async () => {
+                // Perangkat sentuh (HP/tablet): buka aplikasi kamera langsung
+                if (window.matchMedia('(pointer: coarse)').matches) {
+                    $('pembinaanPhotoCapture').click();
+                    return;
+                }
+                // Desktop: tampilkan kamera langsung di dalam modal
+                if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+                    alert('Browser tidak mendukung akses kamera. Gunakan tombol upload.');
+                    return;
+                }
+                try {
+                    stopPembinaanCamera();
+                    pembinaanCameraStream = await navigator.mediaDevices.getUserMedia({
+                        video: { facingMode: 'environment', width: { ideal: 1280 }, height: { ideal: 720 } },
+                        audio: false
+                    });
+                    $('pembinaanCameraVideo').srcObject = pembinaanCameraStream;
+                    $('pembinaanCameraPanel').style.display = 'block';
+                } catch (err) {
+                    console.error('Error kamera:', err);
+                    alert('Tidak dapat mengakses kamera: izinkan akses kamera di browser, atau gunakan tombol upload.');
+                }
+            });
+
+            $('pembinaanCameraSnap').addEventListener('click', () => {
+                const video = $('pembinaanCameraVideo');
+                if (!video.videoWidth) { alert('Kamera belum siap, coba lagi.'); return; }
+                const c = document.createElement('canvas');
+                c.width = video.videoWidth;
+                c.height = video.videoHeight;
+                c.getContext('2d').drawImage(video, 0, 0, c.width, c.height);
+                c.toBlob(blob => {
+                    if (!blob) return;
+                    stopPembinaanCamera();
+                    $('pembinaanPhoto').value = '';
+                    $('pembinaanPhotoCapture').value = '';
+                    processPembinaanPhoto(new File([blob], 'kamera.jpg', { type: 'image/jpeg' }), null);
+                }, 'image/jpeg', 0.92);
+            });
+
+            $('pembinaanCameraCancel').addEventListener('click', stopPembinaanCamera);
+
+            // Matikan kamera saat modal ditutup (X, Batal, Esc, klik luar)
+            new MutationObserver(() => {
+                if (!$('pembinaanModal').classList.contains('active')) stopPembinaanCamera();
+            }).observe($('pembinaanModal'), { attributes: true, attributeFilter: ['class'] });
 
             $('pembinaanForm').addEventListener('submit', async (e) => {
                 e.preventDefault();
