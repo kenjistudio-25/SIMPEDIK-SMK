@@ -1787,9 +1787,7 @@
                     <div style="width:60px; height:60px; background:#fef3c7; border-radius:50%; display:flex; align-items:center; justify-content:center; margin:0 auto 16px;">
                         <i class="fas fa-calendar-times" style="font-size:1.8rem; color:#d97706;"></i>
                     </div>
-                    <p style="font-size:0.95rem; color:#444; line-height:1.6; margin:0;">
-                        Anda sudah melakukan absensi pada siswa ini hari ini, silahkan gunakan tombol <strong style="color:#dc2626;">Update</strong> pada kolom aksi untuk meng-update datanya.
-                    </p>
+                    <p id="duplikatAbsensiPesan" style="font-size:0.95rem; color:#444; line-height:1.6; margin:0;">Siswa PKL sudah di absensi hari ini.</p>
                 </div>
                 <div class="modal-footer-btns" style="justify-content:center; padding-bottom:20px;">
                     <button type="button" class="btn-simpan" id="btnTutupModalDuplikat" style="background: linear-gradient(135deg, #f59e0b, #d97706); min-width:120px;">
@@ -2168,7 +2166,7 @@
                 const newPassword = document.getElementById('editPassword').value;
                 if (newPassword) updateData.password = newPassword;
 
-                const { error } = await supabaseClient
+                    const { error } = await supabaseClient
                     .from('pembimbingindustri')
                     .update(updateData)
                     .eq('id', id);
@@ -2482,6 +2480,51 @@
             }
         }
 
+
+        // ===== CEGAH ABSENSI GANDA (Nama Siswa + NISN + Tanggal) =====
+        function getTodayLocalISO() {
+            const d = new Date();
+            const pad = n => String(n).padStart(2, '0');
+            return d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-' + pad(d.getDate());
+        }
+
+        // Return { duplicate: boolean, error: Error|null }
+        // excludeId: dipakai saat edit supaya baris itu sendiri tidak dianggap duplikat
+        async function cekAbsensiDuplikat(client, namaSiswa, nisn, tanggal, excludeId) {
+            try {
+                const { data, error } = await client
+                    .from('absensipkl')
+                    .select('id, nisn')
+                    .eq('nama_siswa', namaSiswa)
+                    .eq('tanggal', tanggal);
+                if (error) throw error;
+                const nisnStr = String(nisn || '').trim();
+                const duplicate = (data || []).some(r => {
+                    if (excludeId !== undefined && excludeId !== null && String(r.id) === String(excludeId)) return false;
+                    const rowNisn = String(r.nisn || '').trim();
+                    // data lama tanpa NISN tetap dianggap sebagai absensi siswa yang sama
+                    return !rowNisn || !nisnStr || rowNisn === nisnStr;
+                });
+                return { duplicate, error: null };
+            } catch (err) {
+                return { duplicate: false, error: err };
+            }
+        }
+
+        function showDuplikatAbsensi(namaSiswa, tanggal) {
+            const el = document.getElementById('duplikatAbsensiPesan');
+            const hariIni = tanggal === getTodayLocalISO();
+            const waktu = hariIni
+                ? 'hari ini'
+                : 'pada tanggal ' + new Date(tanggal + 'T00:00:00').toLocaleDateString('id-ID', { day: '2-digit', month: 'long', year: 'numeric' });
+            if (el) el.innerHTML = 'Siswa PKL atas nama <strong style="color:#dc2626;">' + escapeHtmlSafe(namaSiswa) + '</strong> sudah di absensi ' + waktu + '.';
+            document.getElementById('modalDuplikatAbsensi').classList.add('active');
+        }
+
+        function escapeHtmlSafe(s) {
+            return String(s == null ? '' : s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+        }
+
         async function loadAbsensiData() {
             const tbody = document.getElementById('absensiTableBody');
             if (tbody) tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;color:#888;padding:16px;">Memuat data absensi...</td></tr>';
@@ -2506,6 +2549,7 @@
                     id: item.id,
                     id_absen: item.id,
                     nama_siswa: item.nama_siswa,
+                    nisn: item.nisn,
                     tanggal: item.tanggal
                         ? new Date(item.tanggal).toLocaleDateString('id-ID', { day: '2-digit', month: 'long', year: 'numeric' })
                         : '-',
@@ -2618,6 +2662,14 @@
                 btnSimpan.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Menyimpan...';
 
                 try {
+                    // Cegah tanggal yang diubah bentrok dengan absensi lain milik siswa yang sama
+                    const itemEdit = absensiData[editIdx];
+                    const cek = await cekAbsensiDuplikat(supabaseClient, itemEdit.nama_siswa, itemEdit.nisn, tanggal, id_absen);
+                    if (cek.error) throw cek.error;
+                    if (cek.duplicate) {
+                        showDuplikatAbsensi(itemEdit.nama_siswa, tanggal);
+                        return;
+                    }
                     const { error } = await supabaseClient
                         .from('absensipkl')
                         .update({ tanggal: tanggal, status: status })
@@ -2679,7 +2731,7 @@
             async function openModal() {
                 inputNama.value   = siswaAktif ? (siswaAktif.nama_siswa || '-') : '-';
                 inputNisn.value   = siswaAktif ? (siswaAktif.nisn || '-') : '-';
-                inputTgl.value    = new Date().toISOString().split('T')[0];
+                inputTgl.value    = getTodayLocalISO();
                 inputStatus.value = '';
                 inputId.value     = 'Memuat...';
                 inputId.disabled  = true;
@@ -2728,18 +2780,14 @@
                 btnSimpan.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Menyimpan...';
 
                 try {
-                    // Cek apakah sudah ada absensi siswa ini pada tanggal yang sama
-                    const { data: existing, error: cekError } = await supabaseClient
-                        .from('absensipkl')
-                        .select('id')
-                        .eq('nama_siswa', nama_siswa)
-                        .eq('tanggal', tanggal)
-                        .limit(1);
-
-                    if (!cekError && existing && existing.length > 0) {
+                    // Cek duplikat: Nama Siswa + NISN + Tanggal
+                    const cek = await cekAbsensiDuplikat(supabaseClient, nama_siswa, nisn, tanggal);
+                    if (cek.error) throw cek.error;
+                    if (cek.duplicate) {
                         btnSimpan.disabled = false;
                         btnSimpan.innerHTML = 'Simpan';
-                        showModalDuplikat();
+                        closeModal();
+                        showDuplikatAbsensi(nama_siswa, tanggal);
                         return;
                     }
 
