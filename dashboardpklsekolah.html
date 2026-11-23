@@ -723,9 +723,57 @@
         /* ===== ABSENSI PKL (Toolbar Export) ===== */
         .absensi-toolbar {
             display: flex;
-            justify-content: flex-end;
+            justify-content: flex-start;
+            align-items: center;
+            gap: 10px;
             margin-bottom: 16px;
         }
+
+        .btn-tambah-kehadiran {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            background: linear-gradient(135deg, #0ba360, #3cba92);
+            color: white;
+            border: none;
+            padding: 10px 18px;
+            border-radius: 8px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            cursor: pointer;
+            box-shadow: 0 3px 10px rgba(11,163,96,0.3);
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .btn-tambah-kehadiran:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 5px 14px rgba(11,163,96,0.4);
+        }
+
+        /* Toast notif */
+        .toast {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            background: #1e293b;
+            color: white;
+            padding: 14px 22px;
+            border-radius: 10px;
+            font-size: 0.9rem;
+            font-weight: 500;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.25);
+            z-index: 9999;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            transform: translateY(80px);
+            opacity: 0;
+            pointer-events: none;
+            transition: transform 0.3s ease, opacity 0.3s ease;
+        }
+        .toast.show { transform: translateY(0); opacity: 1; }
+        .toast.success { border-left: 4px solid #22c55e; }
+        .toast.error { border-left: 4px solid #ef4444; }
 
         .btn-export-pdf {
             display: flex;
@@ -1069,6 +1117,9 @@
             <div class="tabs-content">
                 <div class="tab-pane active" id="tab-laporan-absensi">
                     <div class="absensi-toolbar">
+                        <button class="btn-tambah-kehadiran" id="btnTambahKehadiran" type="button">
+                            <i class="fas fa-plus"></i> Kehadiran
+                        </button>
                         <button class="btn-export-pdf" id="btnExportAbsensiPdf" type="button">
                             <i class="fas fa-file-pdf"></i> Export Pdf
                         </button>
@@ -1120,11 +1171,12 @@
                                     <th>Nama Siswa</th>
                                     <th>Tanggal</th>
                                     <th>Status Kehadiran</th>
+                                    <th>Aksi</th>
                                 </tr>
                             </thead>
                             <tbody id="absensiTableBody">
                                 <tr class="empty-row">
-                                    <td colspan="5">Memuat data absensi...</td>
+                                    <td colspan="6">Memuat data absensi...</td>
                                 </tr>
                             </tbody>
                         </table>
@@ -1299,6 +1351,123 @@
             </form>
         </div>
     </div>
+
+
+    <!-- ===== MODAL EDIT KEHADIRAN ===== -->
+    <div class="modal-overlay" id="modalEditKehadiran">
+        <div class="modal-box">
+            <div class="modal-header">
+                <h3><i class="fas fa-pen"></i> Edit Kehadiran</h3>
+                <button type="button" class="modal-close" id="closeModalEditKehadiran" title="Tutup">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <form id="formEditKehadiran">
+                <div class="modal-body">
+                    <div class="form-group">
+                        <label>ID Absen</label>
+                        <input type="text" class="form-control" id="editIdAbsen" disabled style="background:#f0fdf4; color:#166534; font-weight:700; letter-spacing:0.5px;">
+                    </div>
+                    <div class="form-group">
+                        <label for="editTanggalAbsen">Tanggal</label>
+                        <input type="date" class="form-control" id="editTanggalAbsen" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Nama Siswa</label>
+                        <input type="text" class="form-control" id="editNamaSiswaAbsen" disabled>
+                    </div>
+                    <div class="form-group">
+                        <label for="editStatusAbsen">Status Kehadiran</label>
+                        <select class="form-control" id="editStatusAbsen" required>
+                            <option value="Hadir">Hadir</option>
+                            <option value="Sakit">Sakit</option>
+                            <option value="Izin">Izin</option>
+                            <option value="Tanpa Keterangan">Tanpa Keterangan</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn-batal" id="cancelModalEditKehadiran">Batal</button>
+                    <button type="submit" class="btn-simpan" id="btnSimpanEditKehadiran" style="background: linear-gradient(135deg, #4338ca, #6366f1);">Simpan Perubahan</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- ===== MODAL INPUT KEHADIRAN ===== -->
+    <div class="modal-overlay" id="modalKehadiran">
+        <div class="modal-box">
+            <div class="modal-header">
+                <h3 id="modalKehadiranTitle"><i class="fas fa-clipboard-check"></i> Input Kehadiran</h3>
+                <button type="button" class="modal-close" id="closeModalKehadiran" title="Tutup">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <form id="formKehadiran">
+                <div class="modal-body">
+                    <div class="form-group">
+                        <label for="inputIdAbsen">ID Absen</label>
+                        <input type="text" class="form-control" id="inputIdAbsen" disabled style="background:#f0fdf4; color:#166534; font-weight:700; letter-spacing:0.5px;">
+                    </div>
+                    <div class="form-group">
+                        <label for="inputTanggalAbsen">Tanggal</label>
+                        <input type="date" class="form-control" id="inputTanggalAbsen" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="inputNamaSiswaAbsen">Nama Siswa</label>
+                        <input type="text" class="form-control" id="inputNamaSiswaAbsen" disabled>
+                    </div>
+                    <div class="form-group">
+                        <label for="inputNisnAbsen">NISN</label>
+                        <input type="text" class="form-control" id="inputNisnAbsen" disabled>
+                    </div>
+                    <div class="form-group">
+                        <label for="inputStatusAbsen">Status Kehadiran</label>
+                        <select class="form-control" id="inputStatusAbsen" required>
+                            <option value="">-- Pilih Status --</option>
+                            <option value="Hadir">Hadir</option>
+                            <option value="Sakit">Sakit</option>
+                            <option value="Izin">Izin</option>
+                            <option value="Tanpa Keterangan">Tanpa Keterangan</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn-batal" id="cancelModalKehadiran">Batal</button>
+                    <button type="submit" class="btn-simpan" style="background: linear-gradient(135deg, #0ba360, #3cba92);">Simpan</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- ===== MODAL NOTIFIKASI DUPLIKAT ABSENSI ===== -->
+    <div class="modal-overlay" id="modalDuplikatAbsensi">
+        <div class="modal-box" style="max-width:420px; text-align:center;">
+            <div class="modal-header" style="background: linear-gradient(135deg, #f59e0b, #d97706); justify-content:center; position:relative;">
+                <h3 style="color:white; font-size:1rem; display:flex; align-items:center; gap:8px;">
+                    <i class="fas fa-exclamation-circle" style="color:white;"></i> Absensi Sudah Ada
+                </h3>
+                <button type="button" class="modal-close" id="closeModalDuplikatAbsensi" title="Tutup" style="position:absolute; right:16px; top:50%; transform:translateY(-50%); color:white;">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="modal-body" style="padding:28px 24px;">
+                <div style="width:60px; height:60px; background:#fef3c7; border-radius:50%; display:flex; align-items:center; justify-content:center; margin:0 auto 16px;">
+                    <i class="fas fa-calendar-times" style="font-size:1.8rem; color:#d97706;"></i>
+                </div>
+                <p style="font-size:0.95rem; color:#444; line-height:1.6; margin:0;">
+                    Anda sudah melakukan absensi pada siswa ini hari ini, silahkan gunakan tombol <strong style="color:#dc2626;">Update</strong> pada kolom aksi untuk meng-update datanya.
+                </p>
+            </div>
+            <div class="modal-footer" style="justify-content:center; padding-bottom:20px;">
+                <button type="button" class="btn-simpan" id="btnTutupModalDuplikat" style="background: linear-gradient(135deg, #f59e0b, #d97706); min-width:120px;">
+                    <i class="fas fa-check"></i> Mengerti
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <div class="toast" id="toast"></div>
 
 
     <script>
@@ -1522,7 +1691,7 @@
             const tbody = document.getElementById('absensiTableBody');
             if (!tbody) return;
             if (absensiData.length === 0) {
-                tbody.innerHTML = '<tr class="empty-row"><td colspan="5">Belum ada data absensi.</td></tr>';
+                tbody.innerHTML = '<tr class="empty-row"><td colspan="6">Belum ada data absensi.</td></tr>';
             } else {
                 tbody.innerHTML = absensiData.map((item, idx) => `
                     <tr>
@@ -1531,6 +1700,13 @@
                         <td class="absen-nama-siswa">${escapeHtmlSekolah(item.nama_siswa)}</td>
                         <td>${escapeHtmlSekolah(item.tanggal)}</td>
                         <td><span class="badge ${getStatusBadgeClass(item.status)}">${escapeHtmlSekolah(item.status)}</span></td>
+                        <td>
+                            <div class="aksi-cell">
+                                <button type="button" class="btn-icon btn-icon-edit" data-action="edit-absen" data-idx="${idx}" title="Edit">
+                                    <i class="fas fa-pen"></i>
+                                </button>
+                            </div>
+                        </td>
                     </tr>`).join('');
             }
             const total = absensiData.length;
@@ -1553,7 +1729,7 @@
         async function loadAbsensiData() {
             if (!dudiClient || !siswaAktif) return;
             const tbody = document.getElementById('absensiTableBody');
-            if (tbody) tbody.innerHTML = '<tr class="empty-row"><td colspan="5">Memuat data absensi...</td></tr>';
+            if (tbody) tbody.innerHTML = '<tr class="empty-row"><td colspan="6">Memuat data absensi...</td></tr>';
             try {
                 const { data, error } = await dudiClient
                     .from('absensipkl')
@@ -2710,6 +2886,225 @@
         });
 
         document.addEventListener('DOMContentLoaded', loadNilaiData);
+
+        // ===== TOAST NOTIFIKASI =====
+        function showToast(message, type = 'success') {
+            const toast = document.getElementById('toast');
+            if (!toast) return;
+            toast.className = `toast ${type}`;
+            toast.innerHTML = `<i class="fas fa-${type === 'success' ? 'check-circle' : 'times-circle'}"></i> ${escapeHtmlSekolah(message)}`;
+            toast.classList.add('show');
+            setTimeout(() => toast.classList.remove('show'), 3500);
+        }
+
+        function formatTanggalAbsen(tanggalISO) {
+            return new Date(tanggalISO).toLocaleDateString('id-ID', { day: '2-digit', month: 'long', year: 'numeric' });
+        }
+
+        // ===== ABSENSI PKL: Edit Kehadiran (Supabase: tabel absensipkl) =====
+        (function setupModalEditKehadiran() {
+            const modal       = document.getElementById('modalEditKehadiran');
+            const form        = document.getElementById('formEditKehadiran');
+            const inputId     = document.getElementById('editIdAbsen');
+            const inputTgl    = document.getElementById('editTanggalAbsen');
+            const inputNama   = document.getElementById('editNamaSiswaAbsen');
+            const inputStatus = document.getElementById('editStatusAbsen');
+            const btnSimpan   = document.getElementById('btnSimpanEditKehadiran');
+
+            let editIdx = null; // index di absensiData yang sedang diedit
+
+            function openEditModal(idx) {
+                const item = absensiData[idx];
+                if (!item) return;
+                editIdx = idx;
+                inputId.value     = item.id_absen;
+                inputNama.value   = item.nama_siswa;
+                inputStatus.value = item.status;
+                inputTgl.value    = item.tanggal_raw || '';
+                modal.classList.add('active');
+            }
+
+            function closeEditModal() {
+                modal.classList.remove('active');
+                form.reset();
+                editIdx = null;
+            }
+
+            document.getElementById('closeModalEditKehadiran').addEventListener('click', closeEditModal);
+            document.getElementById('cancelModalEditKehadiran').addEventListener('click', closeEditModal);
+            modal.addEventListener('click', e => { if (e.target === modal) closeEditModal(); });
+
+            // Event delegation: klik tombol Edit di tabel
+            document.getElementById('absensiTableBody').addEventListener('click', e => {
+                const btn = e.target.closest('button[data-action="edit-absen"]');
+                if (!btn) return;
+                openEditModal(parseInt(btn.dataset.idx, 10));
+            });
+
+            form.addEventListener('submit', async e => {
+                e.preventDefault();
+                if (editIdx === null) return;
+
+                const tanggal  = inputTgl.value;
+                const status   = inputStatus.value;
+                const id_absen = inputId.value;
+                if (!tanggal || !status) return;
+
+                if (!dudiClient) {
+                    showToast('Koneksi database tidak tersedia.', 'error');
+                    return;
+                }
+
+                btnSimpan.disabled = true;
+                btnSimpan.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Menyimpan...';
+
+                try {
+                    const { error } = await dudiClient
+                        .from('absensipkl')
+                        .update({ tanggal: tanggal, status: status })
+                        .eq('id', id_absen);
+
+                    if (error) throw error;
+
+                    absensiData[editIdx].tanggal     = formatTanggalAbsen(tanggal);
+                    absensiData[editIdx].tanggal_raw = tanggal;
+                    absensiData[editIdx].status      = status;
+                    renderAbsensiTable();
+                    closeEditModal();
+                    showToast('Data kehadiran berhasil diperbarui.', 'success');
+                } catch (err) {
+                    console.error('Gagal update kehadiran:', err);
+                    showToast('Gagal memperbarui: ' + err.message, 'error');
+                } finally {
+                    btnSimpan.disabled = false;
+                    btnSimpan.innerHTML = 'Simpan Perubahan';
+                }
+            });
+        })();
+
+        // ===== ABSENSI PKL: Input Kehadiran (Supabase: tabel absensipkl) =====
+        (function setupModalKehadiran() {
+            const modal       = document.getElementById('modalKehadiran');
+            const form        = document.getElementById('formKehadiran');
+            const inputId     = document.getElementById('inputIdAbsen');
+            const inputNama   = document.getElementById('inputNamaSiswaAbsen');
+            const inputNisn   = document.getElementById('inputNisnAbsen');
+            const inputTgl    = document.getElementById('inputTanggalAbsen');
+            const inputStatus = document.getElementById('inputStatusAbsen');
+            const btnSimpan   = form.querySelector('.btn-simpan');
+
+            async function generateNextId() {
+                try {
+                    const { data, error } = await dudiClient
+                        .from('absensipkl')
+                        .select('id')
+                        .order('id', { ascending: false })
+                        .limit(1);
+
+                    if (error) throw error;
+
+                    let nextNum = 1;
+                    if (data && data.length > 0) {
+                        const lastId = String(data[0].id);
+                        const match = lastId.match(/(\d+)$/);
+                        if (match) nextNum = parseInt(match[1], 10) + 1;
+                    }
+                    return 'AB' + String(nextNum).padStart(3, '0');
+                } catch (err) {
+                    console.error('Gagal generate ID:', err);
+                    return 'AB' + String(Date.now()).slice(-3);
+                }
+            }
+
+            async function openModal() {
+                if (!siswaAktif) {
+                    showToast('Belum ada siswa yang dipilih.', 'error');
+                    return;
+                }
+                inputNama.value   = siswaAktif.nama_siswa || '-';
+                inputNisn.value   = siswaAktif.nisn || '-';
+                inputTgl.value    = new Date().toISOString().split('T')[0];
+                inputStatus.value = '';
+                inputId.value     = 'Memuat...';
+                inputId.disabled  = true;
+                modal.classList.add('active');
+
+                inputId.value = await generateNextId();
+            }
+
+            function closeModal() {
+                modal.classList.remove('active');
+                form.reset();
+            }
+
+            document.getElementById('btnTambahKehadiran').addEventListener('click', openModal);
+            document.getElementById('closeModalKehadiran').addEventListener('click', closeModal);
+            document.getElementById('cancelModalKehadiran').addEventListener('click', closeModal);
+            modal.addEventListener('click', e => { if (e.target === modal) closeModal(); });
+
+            // Modal duplikat
+            const modalDuplikat = document.getElementById('modalDuplikatAbsensi');
+            function showModalDuplikat() {
+                closeModal();
+                modalDuplikat.classList.add('active');
+            }
+            function closeModalDuplikat() { modalDuplikat.classList.remove('active'); }
+            document.getElementById('closeModalDuplikatAbsensi').addEventListener('click', closeModalDuplikat);
+            document.getElementById('btnTutupModalDuplikat').addEventListener('click', closeModalDuplikat);
+            modalDuplikat.addEventListener('click', e => { if (e.target === modalDuplikat) closeModalDuplikat(); });
+
+            form.addEventListener('submit', async e => {
+                e.preventDefault();
+                const id_absen   = inputId.value.trim();
+                const nama_siswa = inputNama.value;
+                const nisn       = inputNisn.value;
+                const tanggal    = inputTgl.value;
+                const status     = inputStatus.value;
+                if (!id_absen || !status || !tanggal || id_absen === 'Memuat...') return;
+
+                if (!dudiClient) {
+                    showToast('Koneksi database tidak tersedia.', 'error');
+                    return;
+                }
+
+                btnSimpan.disabled = true;
+                btnSimpan.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Menyimpan...';
+
+                try {
+                    // Cek apakah sudah ada absensi siswa ini pada tanggal yang sama
+                    const { data: existing, error: cekError } = await dudiClient
+                        .from('absensipkl')
+                        .select('id')
+                        .eq('nama_siswa', nama_siswa)
+                        .eq('tanggal', tanggal)
+                        .limit(1);
+
+                    if (!cekError && existing && existing.length > 0) {
+                        btnSimpan.disabled = false;
+                        btnSimpan.innerHTML = 'Simpan';
+                        showModalDuplikat();
+                        return;
+                    }
+
+                    const { error } = await dudiClient
+                        .from('absensipkl')
+                        .insert([{ id: id_absen, tanggal: tanggal, nama_siswa: nama_siswa, nisn: nisn, status: status }]);
+
+                    if (error) throw error;
+
+                    absensiData.push({ id: Date.now(), id_absen, nama_siswa, nisn, tanggal: formatTanggalAbsen(tanggal), tanggal_raw: tanggal, status });
+                    renderAbsensiTable();
+                    closeModal();
+                    showToast('Data kehadiran berhasil disimpan.', 'success');
+                } catch (err) {
+                    console.error('Gagal menyimpan kehadiran:', err);
+                    showToast('Gagal menyimpan: ' + err.message, 'error');
+                } finally {
+                    btnSimpan.disabled = false;
+                    btnSimpan.innerHTML = 'Simpan';
+                }
+            });
+        })();
     </script>
 </body>
 </html>
